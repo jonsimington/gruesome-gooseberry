@@ -19,7 +19,7 @@ namespace chess
 std::string AI::get_name() const
 {
     // REPLACE WITH YOUR TEAM NAME!
-    return "Chess C++ Player";
+    return "david-crow";
 }
 
 /// <summary>
@@ -32,7 +32,7 @@ void AI::start()
 }
 
 /// <summary>
-/// This is automatically called the game (or anything in it) updates
+/// This is automatically called when the game (or anything in it) updates
 /// </summary>
 void AI::game_updated()
 {
