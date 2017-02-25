@@ -2,6 +2,9 @@
 // This is where you build your AI
 
 #include "ai.hpp"
+#include "attack_piece.cpp"
+#include "chessboard.cpp"
+using namespace std;
 
 // You can add #includes here for your AI.
 
@@ -18,8 +21,8 @@ namespace chess
 /// <returns>The name of your AI.</returns>
 std::string AI::get_name() const
 {
-    // REPLACE WITH YOUR TEAM NAME!
-    return "david-crow";
+  // REPLACE WITH YOUR TEAM NAME!
+  return "david-crow";
 }
 
 /// <summary>
@@ -27,8 +30,8 @@ std::string AI::get_name() const
 /// </summary>
 void AI::start()
 {
-    // This is a good place to initialize any variables
-    srand(time(NULL));
+  // This is a good place to initialize any variables
+  srand(time(NULL));
 }
 
 /// <summary>
@@ -36,7 +39,7 @@ void AI::start()
 /// </summary>
 void AI::game_updated()
 {
-    // If a function you call triggers an update this will be called before it returns.
+  // If a function you call triggers an update this will be called before it returns.
 }
 
 /// <summary>
@@ -55,33 +58,98 @@ void AI::ended(bool won, const std::string& reason)
 /// <returns>Represents if you want to end your turn. True means end your turn, False means to keep your turn going and re-call this function.</returns>
 bool AI::run_turn()
 {
-    // Here is where you'll want to code your AI.
+  Chessboard board;
+  board.startGame();
 
-    // We've provided sample code that:
-    //    1) prints the board to the console
-    //    2) prints the opponent's last move to the console
-    //    3) prints how much time remaining this AI has to calculate moves
-    //    4) makes a random (and probably invalid) move.
+  AttackPiece attack;
+  attack.generateAttacks();
 
-    // 1) print the board to the console
-    print_current_board();
+  for (int i = 0; i < BOARD_SIZE; i++)
+  {
+    if (board.black[KING][i] == 1)
+      cout << board.getKingMoves(BLACK, i, attack) << " B K\t" << i << endl;
 
-    // 2) print the opponent's last move to the console
-    if(game->moves.size() > 0)
-    {
-        std::cout << "Opponent's Last Move: '" << game->moves[game->moves.size() - 1]->san << "'" << std::endl;
-    }
+    if (board.black[QUEEN][i] == 1)
+      cout << board.getQueenMoves(BLACK, i, attack) << " B Q\t" << i << endl;
 
-    // 3) print how much time remaining this AI has to calculate moves
-    std::cout << "Time Remaining: " << player->time_remaining << " ns" << std::endl;
+    if (board.black[ROOKS][i] == 1)
+      cout << board.getRookMoves(BLACK, i, attack) << " B R\t" << i << endl;
 
-    // 4) make a random (and probably invalid) move.
-    chess::Piece random_piece = player->pieces[rand() % player->pieces.size()];
-    std::string random_file(1, 'a' + rand() % 8);
-    int random_rank = (rand() % 8) + 1;
-    random_piece->move(random_file, random_rank);
+    if (board.black[BISHOPS][i] == 1)
+      cout << board.getBishopMoves(BLACK, i, attack) << " B B\t" << i << endl;
 
-    return true; // to signify we are done with our turn.
+    if (board.black[KNIGHTS][i] == 1)
+      cout << board.getKnightMoves(BLACK, i, attack) << " B N\t" << i << endl;
+
+    if (board.black[PAWNS][i] == 1)
+      cout << board.getPawnMoves(BLACK, i, attack) << " B P\t" << i << endl;
+
+    if (board.white[KING][i] == 1)
+      cout << board.getKingMoves(WHITE, i, attack) << " W K\t" << i << endl;
+
+    if (board.white[QUEEN][i] == 1)
+      cout << board.getQueenMoves(WHITE, i, attack) << " W Q\t" << i << endl;
+
+    if (board.white[ROOKS][i] == 1)
+      cout << board.getRookMoves(WHITE, i, attack) << " W R\t" << i << endl;
+
+    if (board.white[BISHOPS][i] == 1)
+      cout << board.getBishopMoves(WHITE, i, attack) << " W B\t" << i << endl;
+
+    if (board.white[KNIGHTS][i] == 1)
+      cout << board.getKnightMoves(WHITE, i, attack) << " W N\t" << i << endl;
+
+    if (board.white[PAWNS][i] == 1)
+      cout << board.getPawnMoves(WHITE, i, attack) << " W P\t" << i << endl;
+  }
+
+  // for all of the pieces on the chessboard
+  // generate moves
+  cout << endl;
+  cout << "BLACK------------" << endl;
+  for (int i = 0; i < NUM_TYPES; i++)
+    cout << board.black[i] << endl;
+
+  cout << board.b_pieces << endl << endl;
+
+  cout << "WHITE------------" << endl;
+  for (int i = 0; i < NUM_TYPES; i++)
+    cout << board.white[i] << endl;
+
+  cout << board.w_pieces << endl << endl;
+  cout << board.all_pieces << endl;
+  cout << endl << endl << endl;
+  //
+  // for (int i = BOARD_SIZE - 1; i >= 0; i--)
+  //   cout << attack.attacking_b_pawn[i] << "--- " << i << endl;
+
+  // Here is where you'll want to code your AI.
+
+  // We've provided sample code that:
+  //    1) prints the board to the console
+  //    2) prints the opponent's last move to the console
+  //    3) prints how much time remaining this AI has to calculate moves
+  //    4) makes a random (and probably invalid) move.
+
+  // 1) print the board to the console
+  print_current_board();
+
+  // 2) print the opponent's last move to the console
+  if(game->moves.size() > 0)
+  {
+    std::cout << "Opponent's Last Move: '" << game->moves[game->moves.size() - 1]->san << "'" << std::endl;
+  }
+
+  // 3) print how much time remaining this AI has to calculate moves
+  std::cout << "Time Remaining: " << player->time_remaining << " ns" << std::endl;
+
+  // 4) make a random (and probably invalid) move.
+  // chess::Piece random_piece = player->pieces[rand() % player->pieces.size()];
+  // std::string random_file(1, 'a' + rand() % 8);
+  // int random_rank = (rand() % 8) + 1;
+  // random_piece->move(random_file, random_rank);
+
+  return true; // to signify we are done with our turn.
 }
 
 /// <summary>
@@ -92,62 +160,62 @@ bool AI::run_turn()
 /// </remarks>
 void AI::print_current_board()
 {
-    for(int rank = 9; rank >= -1; rank--)
+  for(int rank = 9; rank >= -1; rank--)
+  {
+    std::string str = "";
+    if(rank == 9 || rank == 0) // then the top or bottom of the board
     {
-        std::string str = "";
-        if(rank == 9 || rank == 0) // then the top or bottom of the board
-        {
-            str = "   +------------------------+";
-        }
-        else if(rank == -1) // then show the ranks
-        {
-            str = "     a  b  c  d  e  f  g  h";
-        }
-        else // board
-        {
-            str += " ";
-            str += std::to_string(rank);
-            str += " |";
-            // fill in all the files with pieces at the current rank
-            for(int file_offset = 0; file_offset < 8; file_offset++)
-            {
-                std::string file(1, 'a' + file_offset); // start at a, with with file offset increasing the char;
-                chess::Piece current_piece = nullptr;
-                for(const auto& piece : game->pieces)
-                {
-                    if(piece->file == file && piece->rank == rank) // then we found the piece at (file, rank)
-                    {
-                        current_piece = piece;
-                        break;
-                    }
-                }
-
-                char code = '.'; // default "no piece";
-                if(current_piece != nullptr)
-                {
-                    code = current_piece->type[0];
-
-                    if(current_piece->type == "Knight") // 'K' is for "King", we use 'N' for "Knights"
-                    {
-                        code = 'N';
-                    }
-
-                    if(current_piece->owner->id == "1") // the second player (black) is lower case. Otherwise it's upppercase already
-                    {
-                        code = tolower(code);
-                    }
-                }
-
-                str += " ";
-                str += code;
-                str += " ";
-            }
-
-            str += "|";
-        }
-
-        std::cout << str << std::endl;
+      str = "   +------------------------+";
     }
+    else if(rank == -1) // then show the ranks
+    {
+      str = "     a  b  c  d  e  f  g  h";
+    }
+    else // board
+    {
+      str += " ";
+      str += std::to_string(rank);
+      str += " |";
+      // fill in all the files with pieces at the current rank
+      for(int file_offset = 0; file_offset < 8; file_offset++)
+      {
+        std::string file(1, 'a' + file_offset); // start at a, with with file offset increasing the char;
+        chess::Piece current_piece = nullptr;
+        for(const auto& piece : game->pieces)
+        {
+          if(piece->file == file && piece->rank == rank) // then we found the piece at (file, rank)
+          {
+            current_piece = piece;
+            break;
+          }
+        }
+
+        char code = '.'; // default "no piece";
+        if(current_piece != nullptr)
+      {
+          code = current_piece->type[0];
+
+          if(current_piece->type == "Knight") // 'K' is for "King", we use 'N' for "Knights"
+          {
+            code = 'N';
+          }
+
+          if(current_piece->owner->id == "1") // the second player (black) is lower case. Otherwise it's upppercase already
+          {
+            code = tolower(code);
+          }
+        }
+
+        str += " ";
+        str += code;
+        str += " ";
+      }
+
+      str += "|";
+    }
+
+    std::cout << str << std::endl;
+  }
 }
 
 // You can add additional methods here for your AI to call

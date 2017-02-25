@@ -12,6 +12,10 @@
 #include "../../joueur/src/attr_wrapper.hpp"
 
 // You can add additional #includes here
+#include "attack_piece.h"
+#include "chessboard.h"
+#include <iostream>
+using namespace std;
 
 namespace cpp_client
 {
