@@ -590,14 +590,10 @@ bitset<BOARD_SIZE> Chessboard::getBishopMoves(const string c, const int i, const
 // returns all valid knight moves given the current location of all pieces
 bitset<BOARD_SIZE> Chessboard::getKnightMoves(const string c, const int i, const AttackPiece& a)
 {
-  bitset<BOARD_SIZE> my_side;
-
   if (c == BLACK) // black
-    my_side = b_pieces;
+    return a.attacking_knight[i] & ~b_pieces;
   else // white
-    my_side = w_pieces;
-
-  return a.attacking_knight[i] & ~my_side;
+    return a.attacking_knight[i] & ~w_pieces;
 }
 
 // returns all valid pawn moves given the current location of all pieces
@@ -625,6 +621,15 @@ bitset<BOARD_SIZE> Chessboard::getPawnMoves(const string c, const int i, const A
   }
 
   return valid_moves;
+}
+
+// returns all valid pawn attacks (no moves) given the current location of all pieces
+bitset<BOARD_SIZE> Chessboard::getPawnAttacks(const string c, const int i, const AttackPiece& a)
+{
+  if (c == BLACK) // black
+    return a.attacking_b_pawn[i] & ~b_pieces;
+  else // white
+    return a.attacking_w_pawn[i] & ~w_pieces;
 }
 
 // returns true if king has been captured; false otherwise

@@ -52,5 +52,6 @@ public:
   bitset<BOARD_SIZE> getBishopMoves(const string c, const int i, const AttackPiece& a);
   bitset<BOARD_SIZE> getKnightMoves(const string c, const int i, const AttackPiece& a);
   bitset<BOARD_SIZE> getPawnMoves(const string c, const int i, const AttackPiece& a);
+  bitset<BOARD_SIZE> getPawnAttacks(const string c, const int i, const AttackPiece& a);
   bool gameOver();
 };
