@@ -79,7 +79,6 @@ bool AI::run_turn()
   }
 
   board.readBoard(black_pieces, white_pieces);
-  cout << black_pieces.size() << " " << white_pieces.size() << endl;
 
   AttackPiece attack;
   attack.generateAttacks();
@@ -89,6 +88,23 @@ bool AI::run_turn()
   bitset<BOARD_SIZE> potential_pieces = 0;
   vector<PieceToMove> valid_pieces;
   PieceToMove piece_to_move;
+  string last_move;
+  bool can_en_passant = false;
+
+  if (game->moves.size() > 0)
+  {
+    last_move = game->moves[game->moves.size() - 1]->san;
+
+    // if the opponent just moved a pawn
+    if (last_move.size() == PAWN_NOTATION)
+    {
+      // if the opponent advanced a pawn two squares from the start location
+      if (abs(game->moves[game->moves.size() - 1]->from_rank - last_move[1]) == EN_PASSANT)
+      {
+        can_en_passant = true;
+      }
+    }
+  }
 
   if (player->color == "Black")
   {
@@ -164,6 +180,14 @@ bool AI::run_turn()
         // cout << board.getPawnMoves(BLACK, i, attack) << " B P\t" << i << endl;
         piece_to_move.piece_moves = board.getPawnMoves(BLACK, i, attack);
 
+        if (can_en_passant)
+        {
+          int index = getIndex(last_move[1] + 1, last_move[0] + "");
+
+          if (attack.moving_b_pawn[i][index] == 1)
+            piece_to_move.piece_moves[index] = 1;
+        }
+
         if (piece_to_move.piece_moves.count() > 0)
         {
           piece_to_move.piece_rank = getRank(i);
@@ -174,7 +198,7 @@ bool AI::run_turn()
     }
   }
 
-  else
+  else // my color is white
   {
     for (int i = 0; i < BOARD_SIZE; i++)
     {
@@ -247,6 +271,14 @@ bool AI::run_turn()
       {
         // cout << board.getPawnMoves(WHITE, i, attack) << " W P\t" << i << endl;
         piece_to_move.piece_moves = board.getPawnMoves(WHITE, i, attack);
+
+        if (can_en_passant)
+        {
+          int index = getIndex(last_move[1] - 1, last_move[0] + "");
+
+          if (attack.moving_w_pawn[i][index] == 1)
+            piece_to_move.piece_moves[index] = 1;
+        }
 
         if (piece_to_move.piece_moves.count() > 0)
         {
@@ -334,7 +366,7 @@ bool AI::run_turn()
     std::cout << "Opponent's Last Move: '" << game->moves[game->moves.size() - 1]->san << "'" << std::endl;
   }
 
-  // 3) print how much time remaining this AI has to calculate moves
+  // // 3) print how much time remaining this AI has to calculate moves
   std::cout << "Time Remaining: " << player->time_remaining << " ns" << std::endl;
 
   // 4) make a random (and probably invalid) move.

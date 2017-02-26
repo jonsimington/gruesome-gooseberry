@@ -59,3 +59,6 @@ const int B_PAWN_RIGHT = 55;
 // const int W_KNIGHT_2 = 6;
 const int W_PAWN_LEFT = 8;
 const int W_PAWN_RIGHT = 15;
+
+const int PAWN_NOTATION = 2; // 2 characters in SAN for pawn movements
+const int EN_PASSANT = 2; // can only EP if pawn moved 2 squares
