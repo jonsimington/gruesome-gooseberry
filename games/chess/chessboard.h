@@ -13,6 +13,16 @@
 #include <string>
 using namespace std;
 
+int getRank(const int i);
+string getFile(const int i);
+
+struct PieceToMove
+{
+  bitset<BOARD_SIZE> piece_moves;
+  int piece_rank;
+  string piece_file;
+};
+
 // this class holds the locations of all pieces
 class Chessboard // need public and private members (getters/setters)
 {
@@ -27,7 +37,7 @@ public:
 	Chessboard();
 	Chessboard(const Chessboard& b);
 
-	void startGame();
+	void readBoard();
   bitset<BOARD_SIZE> getKingMoves(const string c, const int i, const AttackPiece& a);
   bitset<BOARD_SIZE> getQueenMoves(const string c, const int i, const AttackPiece& a);
   bitset<BOARD_SIZE> getRookMoves(const string c, const int i, const AttackPiece& a);

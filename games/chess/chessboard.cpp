@@ -7,6 +7,45 @@
 #include "chessboard.h"
 using namespace std;
 
+int getRank(const int i)
+{
+  return i / HEIGHT_WIDTH + 1;
+}
+
+string getFile(const int i)
+{
+  string file;
+  int temp_file = i % HEIGHT_WIDTH + 1;
+
+  switch(temp_file)
+  {
+    case 1:
+      file = "a";
+      break;
+    case 2:
+      file = "b";
+      break;
+    case 3:
+      file = "c";
+      break;
+    case 4:
+      file = "d";
+      break;
+    case 5:
+      file = "e";
+      break;
+    case 6:
+      file = "f";
+      break;
+    case 7:
+      file = "g";
+      break;
+    default:
+      file = "h";
+  }
+
+  return file;
+}
 
 // this initializes an empty board (i.e. no pieces)
 Chessboard::Chessboard()
@@ -37,7 +76,7 @@ Chessboard::Chessboard(const Chessboard& b)
 }
 
 // places black and white pieces according to standard chess rules
-void Chessboard::startGame()
+void Chessboard::readBoard()
 {
   // kings
   black[KING][B_KING] = 1;

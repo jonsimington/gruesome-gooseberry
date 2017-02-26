@@ -2,8 +2,6 @@
 // This is where you build your AI
 
 #include "ai.hpp"
-#include "attack_piece.cpp"
-#include "chessboard.cpp"
 using namespace std;
 
 // You can add #includes here for your AI.
@@ -59,69 +57,240 @@ void AI::ended(bool won, const std::string& reason)
 bool AI::run_turn()
 {
   Chessboard board;
-  board.startGame();
+  board.readBoard();
 
   AttackPiece attack;
   attack.generateAttacks();
 
-  for (int i = 0; i < BOARD_SIZE; i++)
+  int num_moves = 0;
+  int num_pieces = player->pieces.size();
+  bitset<BOARD_SIZE> potential_pieces = 0;
+  vector<PieceToMove> valid_pieces;
+  PieceToMove piece_to_move;
+
+  if (player->color == "Black")
   {
-    if (board.black[KING][i] == 1)
-      cout << board.getKingMoves(BLACK, i, attack) << " B K\t" << i << endl;
+    for (int i = 0; i < BOARD_SIZE; i++)
+    {
+      if (board.black[KING][i] == 1)
+      {
+        // cout << board.getKingMoves(BLACK, i, attack) << " B K\t" << i << endl;
+        piece_to_move.piece_moves = board.getKingMoves(BLACK, i, attack);
 
-    if (board.black[QUEEN][i] == 1)
-      cout << board.getQueenMoves(BLACK, i, attack) << " B Q\t" << i << endl;
+        if (piece_to_move.piece_moves.count() > 0)
+        {
+          piece_to_move.piece_rank = getRank(i);
+          piece_to_move.piece_file = getFile(i);
+          valid_pieces.push_back(piece_to_move);
+        }
+      }
 
-    if (board.black[ROOKS][i] == 1)
-      cout << board.getRookMoves(BLACK, i, attack) << " B R\t" << i << endl;
+      if (board.black[QUEEN][i] == 1)
+      {
+        // cout << board.getQueenMoves(BLACK, i, attack) << " B Q\t" << i << endl;
+        piece_to_move.piece_moves = board.getQueenMoves(BLACK, i, attack);
 
-    if (board.black[BISHOPS][i] == 1)
-      cout << board.getBishopMoves(BLACK, i, attack) << " B B\t" << i << endl;
+        if (piece_to_move.piece_moves.count() > 0)
+        {
+          piece_to_move.piece_rank = getRank(i);
+          piece_to_move.piece_file = getFile(i);
+          valid_pieces.push_back(piece_to_move);
+        }
+      }
 
-    if (board.black[KNIGHTS][i] == 1)
-      cout << board.getKnightMoves(BLACK, i, attack) << " B N\t" << i << endl;
+      if (board.black[ROOKS][i] == 1)
+      {
+        // cout << board.getRookMoves(BLACK, i, attack) << " B R\t" << i << endl;
+        piece_to_move.piece_moves = board.getRookMoves(BLACK, i, attack);
 
-    if (board.black[PAWNS][i] == 1)
-      cout << board.getPawnMoves(BLACK, i, attack) << " B P\t" << i << endl;
+        if (piece_to_move.piece_moves.count() > 0)
+        {
+          piece_to_move.piece_rank = getRank(i);
+          piece_to_move.piece_file = getFile(i);
+          valid_pieces.push_back(piece_to_move);
+        }
+      }
 
-    if (board.white[KING][i] == 1)
-      cout << board.getKingMoves(WHITE, i, attack) << " W K\t" << i << endl;
+      if (board.black[BISHOPS][i] == 1)
+      {
+        // cout << board.getBishopMoves(BLACK, i, attack) << " B B\t" << i << endl;
+        piece_to_move.piece_moves = board.getBishopMoves(BLACK, i, attack);
 
-    if (board.white[QUEEN][i] == 1)
-      cout << board.getQueenMoves(WHITE, i, attack) << " W Q\t" << i << endl;
+        if (piece_to_move.piece_moves.count() > 0)
+        {
+          piece_to_move.piece_rank = getRank(i);
+          piece_to_move.piece_file = getFile(i);
+          valid_pieces.push_back(piece_to_move);
+        }
+      }
 
-    if (board.white[ROOKS][i] == 1)
-      cout << board.getRookMoves(WHITE, i, attack) << " W R\t" << i << endl;
+      if (board.black[KNIGHTS][i] == 1)
+      {
+        // cout << board.getKnightMoves(BLACK, i, attack) << " B N\t" << i << endl;
+        piece_to_move.piece_moves = board.getKnightMoves(BLACK, i, attack);
 
-    if (board.white[BISHOPS][i] == 1)
-      cout << board.getBishopMoves(WHITE, i, attack) << " W B\t" << i << endl;
+        if (piece_to_move.piece_moves.count() > 0)
+        {
+          piece_to_move.piece_rank = getRank(i);
+          piece_to_move.piece_file = getFile(i);
+          valid_pieces.push_back(piece_to_move);
+        }
+      }
 
-    if (board.white[KNIGHTS][i] == 1)
-      cout << board.getKnightMoves(WHITE, i, attack) << " W N\t" << i << endl;
+      if (board.black[PAWNS][i] == 1)
+      {
+        // cout << board.getPawnMoves(BLACK, i, attack) << " B P\t" << i << endl;
+        piece_to_move.piece_moves = board.getPawnMoves(BLACK, i, attack);
 
-    if (board.white[PAWNS][i] == 1)
-      cout << board.getPawnMoves(WHITE, i, attack) << " W P\t" << i << endl;
+        if (piece_to_move.piece_moves.count() > 0)
+        {
+          piece_to_move.piece_rank = getRank(i);
+          piece_to_move.piece_file = getFile(i);
+          valid_pieces.push_back(piece_to_move);
+        }
+      }
+    }
   }
 
-  // for all of the pieces on the chessboard
-  // generate moves
-  cout << endl;
-  cout << "BLACK------------" << endl;
-  for (int i = 0; i < NUM_TYPES; i++)
-    cout << board.black[i] << endl;
+  else
+  {
+    for (int i = 0; i < BOARD_SIZE; i++)
+    {
+      if (board.white[KING][i] == 1)
+      {
+        // cout << board.getKingMoves(WHITE, i, attack) << " W K\t" << i << endl;
+        piece_to_move.piece_moves = board.getKingMoves(WHITE, i, attack);
 
-  cout << board.b_pieces << endl << endl;
+        if (piece_to_move.piece_moves.count() > 0)
+        {
+          piece_to_move.piece_rank = getRank(i);
+          piece_to_move.piece_file = getFile(i);
+          valid_pieces.push_back(piece_to_move);
+        }
+      }
 
-  cout << "WHITE------------" << endl;
-  for (int i = 0; i < NUM_TYPES; i++)
-    cout << board.white[i] << endl;
+      if (board.white[QUEEN][i] == 1)
+      {
+        // cout << board.getQueenMoves(WHITE, i, attack) << " W Q\t" << i << endl;
+        piece_to_move.piece_moves = board.getQueenMoves(WHITE, i, attack);
 
-  cout << board.w_pieces << endl << endl;
-  cout << board.all_pieces << endl;
-  cout << endl << endl << endl;
+        if (piece_to_move.piece_moves.count() > 0)
+        {
+          piece_to_move.piece_rank = getRank(i);
+          piece_to_move.piece_file = getFile(i);
+          valid_pieces.push_back(piece_to_move);
+        }
+      }
+
+      if (board.white[ROOKS][i] == 1)
+      {
+          // cout << board.getRookMoves(WHITE, i, attack) << " W R\t" << i << endl;
+          piece_to_move.piece_moves = board.getRookMoves(WHITE, i, attack);
+
+          if (piece_to_move.piece_moves.count() > 0)
+          {
+            piece_to_move.piece_rank = getRank(i);
+            piece_to_move.piece_file = getFile(i);
+            valid_pieces.push_back(piece_to_move);
+          }
+      }
+
+      if (board.white[BISHOPS][i] == 1)
+      {
+        // cout << board.getBishopMoves(WHITE, i, attack) << " W B\t" << i << endl;
+        piece_to_move.piece_moves = board.getBishopMoves(WHITE, i, attack);
+
+        if (piece_to_move.piece_moves.count() > 0)
+        {
+          piece_to_move.piece_rank = getRank(i);
+          piece_to_move.piece_file = getFile(i);
+          valid_pieces.push_back(piece_to_move);
+        }
+      }
+
+      if (board.white[KNIGHTS][i] == 1)
+      {
+        // cout << board.getKnightMoves(WHITE, i, attack) << " W N\t" << i << endl;
+        piece_to_move.piece_moves = board.getKnightMoves(WHITE, i, attack);
+
+        if (piece_to_move.piece_moves.count() > 0)
+        {
+          piece_to_move.piece_rank = getRank(i);
+          piece_to_move.piece_file = getFile(i);
+          valid_pieces.push_back(piece_to_move);
+        }
+      }
+
+      if (board.white[PAWNS][i] == 1)
+      {
+        // cout << board.getPawnMoves(WHITE, i, attack) << " W P\t" << i << endl;
+        piece_to_move.piece_moves = board.getPawnMoves(WHITE, i, attack);
+
+        if (piece_to_move.piece_moves.count() > 0)
+        {
+          piece_to_move.piece_rank = getRank(i);
+          piece_to_move.piece_file = getFile(i);
+          valid_pieces.push_back(piece_to_move);
+        }
+      }
+    }
+  }
+
+  for (int i = 0; i < valid_pieces.size(); i++)
+  {
+    cout << valid_pieces[i].piece_moves << endl
+      << valid_pieces[i].piece_rank << " " << valid_pieces[i].piece_file << endl;
+  }
+
+  // if king in check, fix it
+  // otherwise
+  int r = rand() % valid_pieces.size();
+  PieceToMove rand_piece = valid_pieces[r];
+  int i = rand() % rand_piece.piece_moves.count() + 1;
+
+  int rand_move = -1;
+  while (i != 0)
+  {
+    rand_move++;
+
+    if (rand_piece.piece_moves[rand_move] == 1)
+      i--;
+  }
+
+  cout << "piece -- rank: " << rand_piece.piece_rank << ", file: " << rand_piece.piece_file << endl;
+  int rand_rank = getRank(rand_move);
+  string rand_file = getFile(rand_move);
+  cout << "move -- rank: " << rand_rank << ", file: " << rand_file << endl;
+
+  for (auto piece : player->pieces)
+  {
+    if (piece->file == rand_piece.piece_file && piece->rank == rand_piece.piece_rank)
+    {
+      piece->move(rand_file, rand_rank);
+      break;
+    }
+  }
+
+  /*---------------
+  At this point, I know where the piece is going to go. I now need
+  to identify the piece so that I can tell the framework which piece
+  to move.
+  ---------------*/
+
+  // cout << endl;
+  // cout << "BLACK------------" << endl;
+  // for (int i = 0; i < NUM_TYPES; i++)
+  //   cout << board.black[i] << endl;
   //
-  // for (int i = BOARD_SIZE - 1; i >= 0; i--)
-  //   cout << attack.attacking_b_pawn[i] << "--- " << i << endl;
+  // cout << board.b_pieces << endl << endl;
+  //
+  // cout << "WHITE------------" << endl;
+  // for (int i = 0; i < NUM_TYPES; i++)
+  //   cout << board.white[i] << endl;
+  //
+  // cout << board.w_pieces << endl << endl;
+  // cout << board.all_pieces << endl;
+  // cout << endl << endl << endl;
 
   // Here is where you'll want to code your AI.
 
