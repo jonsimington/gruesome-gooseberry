@@ -36,26 +36,26 @@ const int BISHOPS = 3;
 const int KNIGHTS = 4;
 const int PAWNS = 5;
 
-// starting indices of each black piece (pawns have a range)
-const int B_KING = 60;
-const int B_QUEEN = 59;
-const int B_ROOK_1 = 56;
-const int B_ROOK_2 = 63;
-const int B_BISHOP_1 = 58;
-const int B_BISHOP_2 = 61;
-const int B_KNIGHT_1 = 57;
-const int B_KNIGHT_2 = 62;
+// // starting indices of each black piece (pawns have a range)
+// const int B_KING = 60;
+// const int B_QUEEN = 59;
+// const int B_ROOK_1 = 56;
+// const int B_ROOK_2 = 63;
+// const int B_BISHOP_1 = 58;
+// const int B_BISHOP_2 = 61;
+// const int B_KNIGHT_1 = 57;
+// const int B_KNIGHT_2 = 62;
 const int B_PAWN_LEFT = 48;
 const int B_PAWN_RIGHT = 55;
-
-// starting indices of each white piece (pawns have a range)
-const int W_KING = 3;
-const int W_QUEEN = 4;
-const int W_ROOK_1 = 0;
-const int W_ROOK_2 = 7;
-const int W_BISHOP_1 = 2;
-const int W_BISHOP_2 = 5;
-const int W_KNIGHT_1 = 1;
-const int W_KNIGHT_2 = 6;
+//
+// // starting indices of each white piece (pawns have a range)
+// const int W_KING = 3;
+// const int W_QUEEN = 4;
+// const int W_ROOK_1 = 0;
+// const int W_ROOK_2 = 7;
+// const int W_BISHOP_1 = 2;
+// const int W_BISHOP_2 = 5;
+// const int W_KNIGHT_1 = 1;
+// const int W_KNIGHT_2 = 6;
 const int W_PAWN_LEFT = 8;
 const int W_PAWN_RIGHT = 15;
