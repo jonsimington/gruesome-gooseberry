@@ -57,7 +57,29 @@ void AI::ended(bool won, const std::string& reason)
 bool AI::run_turn()
 {
   Chessboard board;
-  board.readBoard();
+  vector<BasicPiece> black_pieces;
+  vector<BasicPiece> white_pieces;
+
+  for (auto piece : game->pieces)
+  {
+    BasicPiece p;
+    if (piece->owner->color == "Black")
+    {
+      p.type = piece->type;
+      p.index = getIndex(piece->rank, piece->file);
+      black_pieces.push_back(p);
+    }
+
+    else
+    {
+      p.type = piece->type;
+      p.index = getIndex(piece->rank, piece->file);
+      white_pieces.push_back(p);
+    }
+  }
+
+  board.readBoard(black_pieces, white_pieces);
+  cout << black_pieces.size() << " " << white_pieces.size() << endl;
 
   AttackPiece attack;
   attack.generateAttacks();
@@ -257,13 +279,11 @@ bool AI::run_turn()
       i--;
   }
 
-  // cout << "piece -- rank: " << rand_piece.piece_rank << ", file: " << rand_piece.piece_file << endl;
   int rand_rank = getRank(rand_move);
   string rand_file = getFile(rand_move);
-  // cout << "move -- rank: " << rand_rank << ", file: " << rand_file << endl;
 
   for (auto piece : player->pieces)
-  {    
+  {
     if (piece->file == rand_piece.piece_file && piece->rank == rand_piece.piece_rank)
     {
       cout << endl << piece->type << " on " << rand_piece.piece_file

@@ -5,7 +5,6 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "chessboard.h"
-// #include "game.hpp"
 using namespace std;
 
 int getRank(const int i)
@@ -48,6 +47,40 @@ string getFile(const int i)
   return file;
 }
 
+int getIndex(const int rank, const string file)
+{
+  int index = (rank - 1) * HEIGHT_WIDTH;
+  switch(file[0])
+  {
+    case 'a':
+      index += 0;
+      break;
+    case 'b':
+      index += 1;
+      break;
+    case 'c':
+      index += 2;
+      break;
+    case 'd':
+      index += 3;
+      break;
+    case 'e':
+      index += 4;
+      break;
+    case 'f':
+      index += 5;
+      break;
+    case 'g':
+      index += 6;
+      break;
+    case 'h':
+      index += 7;
+      break;
+  }
+
+  return index;
+}
+
 // this initializes an empty board (i.e. no pieces)
 Chessboard::Chessboard()
 {
@@ -77,42 +110,74 @@ Chessboard::Chessboard(const Chessboard& b)
 }
 
 // places black and white pieces according to standard chess rules
-void Chessboard::readBoard()
+void Chessboard::readBoard(vector<BasicPiece> blk_pieces, vector<BasicPiece> wht_pieces)
 {
+  for (int i = 0; i < blk_pieces.size(); i++)
+  {
+    if (blk_pieces[i].type == "King")
+      black[KING][blk_pieces[i].index] = 1;
+    else if (blk_pieces[i].type == "Queen")
+      black[QUEEN][blk_pieces[i].index] = 1;
+    else if (blk_pieces[i].type == "Rook")
+      black[ROOKS][blk_pieces[i].index] = 1;
+    else if (blk_pieces[i].type == "Bishop")
+      black[BISHOPS][blk_pieces[i].index] = 1;
+    else if (blk_pieces[i].type == "Knight")
+      black[KNIGHTS][blk_pieces[i].index] = 1;
+    else if (blk_pieces[i].type == "Pawn")
+      black[PAWNS][blk_pieces[i].index] = 1;
+  }
+
+  for (int i = 0; i < wht_pieces.size(); i++)
+  {
+    if (wht_pieces[i].type == "King")
+      white[KING][wht_pieces[i].index] = 1;
+    else if (wht_pieces[i].type == "Queen")
+      white[QUEEN][wht_pieces[i].index] = 1;
+    else if (wht_pieces[i].type == "Rook")
+      white[ROOKS][wht_pieces[i].index] = 1;
+    else if (wht_pieces[i].type == "Bishop")
+      white[BISHOPS][wht_pieces[i].index] = 1;
+    else if (wht_pieces[i].type == "Knight")
+      white[KNIGHTS][wht_pieces[i].index] = 1;
+    else if (wht_pieces[i].type == "Pawn")
+      white[PAWNS][wht_pieces[i].index] = 1;
+  }
+
   // int num_pieces = cpp_client::chess::Game->pieces.size();
 
-  // kings
-  black[KING][B_KING] = 1;
-  white[KING][W_KING] = 1;
-
-  // queens
-  black[QUEEN][B_QUEEN] = 1;
-  white[QUEEN][W_QUEEN] = 1;
-
-  // rooks
-  black[ROOKS][B_ROOK_1] = 1;
-  black[ROOKS][B_ROOK_2] = 1;
-  white[ROOKS][W_ROOK_1] = 1;
-  white[ROOKS][W_ROOK_2] = 1;
-
-  // bishops
-  black[BISHOPS][B_BISHOP_1] = 1;
-  black[BISHOPS][B_BISHOP_2] = 1;
-  white[BISHOPS][W_BISHOP_1] = 1;
-  white[BISHOPS][W_BISHOP_2] = 1;
-
-  // knights
-  black[KNIGHTS][B_KNIGHT_1] = 1;
-  black[KNIGHTS][B_KNIGHT_2] = 1;
-  white[KNIGHTS][W_KNIGHT_1] = 1;
-  white[KNIGHTS][W_KNIGHT_2] = 1;
-
-  // pawns
-  for (int i = B_PAWN_LEFT; i <= B_PAWN_RIGHT; i++)
-    black[PAWNS][i] = 1;
-
-  for (int i = W_PAWN_LEFT; i <= W_PAWN_RIGHT; i++)
-    white[PAWNS][i] = 1;
+  // // kings
+  // black[KING][B_KING] = 1;
+  // white[KING][W_KING] = 1;
+  //
+  // // queens
+  // black[QUEEN][B_QUEEN] = 1;
+  // white[QUEEN][W_QUEEN] = 1;
+  //
+  // // rooks
+  // black[ROOKS][B_ROOK_1] = 1;
+  // black[ROOKS][B_ROOK_2] = 1;
+  // white[ROOKS][W_ROOK_1] = 1;
+  // white[ROOKS][W_ROOK_2] = 1;
+  //
+  // // bishops
+  // black[BISHOPS][B_BISHOP_1] = 1;
+  // black[BISHOPS][B_BISHOP_2] = 1;
+  // white[BISHOPS][W_BISHOP_1] = 1;
+  // white[BISHOPS][W_BISHOP_2] = 1;
+  //
+  // // knights
+  // black[KNIGHTS][B_KNIGHT_1] = 1;
+  // black[KNIGHTS][B_KNIGHT_2] = 1;
+  // white[KNIGHTS][W_KNIGHT_1] = 1;
+  // white[KNIGHTS][W_KNIGHT_2] = 1;
+  //
+  // // pawns
+  // for (int i = B_PAWN_LEFT; i <= B_PAWN_RIGHT; i++)
+  //   black[PAWNS][i] = 1;
+  //
+  // for (int i = W_PAWN_LEFT; i <= W_PAWN_RIGHT; i++)
+  //   white[PAWNS][i] = 1;
 
   // all pieces
   b_pieces = black[KING] | black[QUEEN] | black[ROOKS]

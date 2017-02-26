@@ -11,8 +11,10 @@
 #include <iostream>
 #include <bitset>
 #include <string>
+#include <vector>
 using namespace std;
 
+int getIndex(const int rank, const string file);
 int getRank(const int i);
 string getFile(const int i);
 
@@ -21,6 +23,12 @@ struct PieceToMove
   bitset<BOARD_SIZE> piece_moves;
   int piece_rank;
   string piece_file;
+};
+
+struct BasicPiece
+{
+  string type;
+  int index;
 };
 
 // this class holds the locations of all pieces
@@ -37,7 +45,7 @@ public:
 	Chessboard();
 	Chessboard(const Chessboard& b);
 
-	void readBoard();
+  void readBoard(vector<BasicPiece> blk_pieces, vector<BasicPiece> wht_pieces);
   bitset<BOARD_SIZE> getKingMoves(const string c, const int i, const AttackPiece& a);
   bitset<BOARD_SIZE> getQueenMoves(const string c, const int i, const AttackPiece& a);
   bitset<BOARD_SIZE> getRookMoves(const string c, const int i, const AttackPiece& a);
