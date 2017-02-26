@@ -81,6 +81,16 @@ int getIndex(const int rank, const string file)
   return index;
 }
 
+bool isChecked(const int location, const Chessboard& board)
+{
+  bool checked = false;
+
+
+  
+
+  return checked;
+}
+
 // this initializes an empty board (i.e. no pieces)
 Chessboard::Chessboard()
 {
@@ -143,41 +153,6 @@ void Chessboard::readBoard(vector<BasicPiece> blk_pieces, vector<BasicPiece> wht
     else if (wht_pieces[i].type == "Pawn")
       white[PAWNS][wht_pieces[i].index] = 1;
   }
-
-  // int num_pieces = cpp_client::chess::Game->pieces.size();
-  //
-  // // kings
-  // black[KING][B_KING] = 1;
-  // white[KING][W_KING] = 1;
-  //
-  // // queens
-  // black[QUEEN][B_QUEEN] = 1;
-  // white[QUEEN][W_QUEEN] = 1;
-  //
-  // // rooks
-  // black[ROOKS][B_ROOK_1] = 1;
-  // black[ROOKS][B_ROOK_2] = 1;
-  // white[ROOKS][W_ROOK_1] = 1;
-  // white[ROOKS][W_ROOK_2] = 1;
-  //
-  // // bishops
-  // black[BISHOPS][B_BISHOP_1] = 1;
-  // black[BISHOPS][B_BISHOP_2] = 1;
-  // white[BISHOPS][W_BISHOP_1] = 1;
-  // white[BISHOPS][W_BISHOP_2] = 1;
-  //
-  // // knights
-  // black[KNIGHTS][B_KNIGHT_1] = 1;
-  // black[KNIGHTS][B_KNIGHT_2] = 1;
-  // white[KNIGHTS][W_KNIGHT_1] = 1;
-  // white[KNIGHTS][W_KNIGHT_2] = 1;
-  //
-  // // pawns
-  // for (int i = B_PAWN_LEFT; i <= B_PAWN_RIGHT; i++)
-  //   black[PAWNS][i] = 1;
-  //
-  // for (int i = W_PAWN_LEFT; i <= W_PAWN_RIGHT; i++)
-  //   white[PAWNS][i] = 1;
 
   // all pieces
   b_pieces = black[KING] | black[QUEEN] | black[ROOKS]
@@ -630,13 +605,4 @@ bitset<BOARD_SIZE> Chessboard::getPawnAttacks(const string c, const int i, const
     return a.attacking_b_pawn[i] & ~b_pieces;
   else // white
     return a.attacking_w_pawn[i] & ~w_pieces;
-}
-
-// returns true if king has been captured; false otherwise
-bool Chessboard::gameOver()
-{
-  if (black[KING] == 0 || white[KING] == 0)
-    return true;
-
-  return false;
 }

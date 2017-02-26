@@ -23,6 +23,7 @@ struct PieceToMove
   bitset<BOARD_SIZE> piece_moves;
   int piece_rank;
   string piece_file;
+  string piece_type;
 };
 
 struct BasicPiece
@@ -55,3 +56,11 @@ public:
   bitset<BOARD_SIZE> getPawnAttacks(const string c, const int i, const AttackPiece& a);
   bool gameOver();
 };
+
+struct NewState
+{
+  Chessboard board;
+  PieceToMove piece;
+};
+
+bool isChecked(const int location, const Chessboard& board);

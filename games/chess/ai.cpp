@@ -17,7 +17,7 @@ namespace chess
 /// Replace the string name.
 /// </summary>
 /// <returns>The name of your AI.</returns>
-std::string AI::get_name() const
+string AI::get_name() const
 {
   // REPLACE WITH YOUR TEAM NAME!
   return "david-crow";
@@ -45,7 +45,7 @@ void AI::game_updated()
 /// </summary>
 /// <param name="won">true if you won, false otherwise</param>
 /// <param name="reason">An explanation for why you either won or lost</param>
-void AI::ended(bool won, const std::string& reason)
+void AI::ended(bool won, const string& reason)
 {
     // You can do any cleanup of your AI here.  The program ends when this function returns.
 }
@@ -59,6 +59,7 @@ bool AI::run_turn()
   Chessboard board;
   vector<BasicPiece> black_pieces;
   vector<BasicPiece> white_pieces;
+  vector<NewState> possible_states;
 
   for (auto piece : game->pieces)
   {
@@ -90,15 +91,12 @@ bool AI::run_turn()
   PieceToMove piece_to_move;
   string last_move;
   bool can_en_passant = false;
+  int king_location;
   bool in_check = false;
   string my_color;
   string their_color;
   bitset<BOARD_SIZE> attacked = 0;
-
-  // get squares attacked by other king
-  // get squares attacked by other queen
-  // get squares attacked by other rooks
-  // etc.
+  bitset<BOARD_SIZE> king_check = 0;
 
   if (player->color == "Black")
   {
@@ -110,131 +108,6 @@ bool AI::run_turn()
   {
     my_color = WHITE;
     their_color = BLACK;
-  }
-
-  // squares attacked = king | queen | rooks | etc
-
-  // if my king in squares attacked
-    // try to move it out of squares attacked
-    // try to move a piece in the way
-    // try to capture attacker
-
-  // can't move king into squares attacked
-
-  for (auto piece : player->opponent->pieces)
-  {
-    int i = getIndex(piece->rank, piece->file);
-
-    if (piece->type == "King")
-      attacked |= board.getKingMoves(their_color, i, attack);
-    else if (piece->type == "Queen")
-      attacked |= board.getQueenMoves(their_color, i, attack);
-    else if (piece->type == "Rook")
-      attacked |= board.getRookMoves(their_color, i, attack);
-    else if (piece->type == "Bishop")
-      attacked |= board.getBishopMoves(their_color, i, attack);
-    else if (piece->type == "Knight")
-      attacked |= board.getKnightMoves(their_color, i, attack);
-    else if (piece->type == "Pawn")
-      attacked |= board.getPawnAttacks(their_color, i, attack);
-  }
-
-  for (auto piece : player->pieces)
-  {
-    int i = getIndex(piece->rank, piece->file);
-
-    if (piece->type == "King")
-    {
-      if (attacked[getIndex(piece->rank, piece->file)] == 1)
-        in_check = true;
-
-      piece_to_move.piece_moves = board.getKingMoves(my_color, i, attack) & ~attacked;
-
-      if (piece_to_move.piece_moves.count() > 0)
-      {
-        piece_to_move.piece_rank = getRank(i);
-        piece_to_move.piece_file = getFile(i);
-        valid_pieces.push_back(piece_to_move);
-      }
-    }
-
-    else if (piece->type == "Queen")
-    {
-      piece_to_move.piece_moves = board.getQueenMoves(my_color, i, attack);
-
-      if (piece_to_move.piece_moves.count() > 0)
-      {
-        piece_to_move.piece_rank = getRank(i);
-        piece_to_move.piece_file = getFile(i);
-        valid_pieces.push_back(piece_to_move);
-      }
-    }
-
-    else if (piece->type == "Rook")
-    {
-      piece_to_move.piece_moves = board.getRookMoves(my_color, i, attack);
-
-      if (piece_to_move.piece_moves.count() > 0)
-      {
-        piece_to_move.piece_rank = getRank(i);
-        piece_to_move.piece_file = getFile(i);
-        valid_pieces.push_back(piece_to_move);
-      }
-    }
-
-    else if (piece->type == "Bishop")
-    {
-      piece_to_move.piece_moves = board.getBishopMoves(my_color, i, attack);
-
-      if (piece_to_move.piece_moves.count() > 0)
-      {
-        piece_to_move.piece_rank = getRank(i);
-        piece_to_move.piece_file = getFile(i);
-        valid_pieces.push_back(piece_to_move);
-      }
-    }
-
-    else if (piece->type == "Knight")
-    {
-      piece_to_move.piece_moves = board.getKnightMoves(my_color, i, attack);
-
-      if (piece_to_move.piece_moves.count() > 0)
-      {
-        piece_to_move.piece_rank = getRank(i);
-        piece_to_move.piece_file = getFile(i);
-        valid_pieces.push_back(piece_to_move);
-      }
-    }
-
-    else if (piece->type == "Pawn")
-    {
-      piece_to_move.piece_moves = board.getPawnMoves(my_color, i, attack);
-
-      if (piece_to_move.piece_moves.count() > 0)
-      {
-        piece_to_move.piece_rank = getRank(i);
-        piece_to_move.piece_file = getFile(i);
-        valid_pieces.push_back(piece_to_move);
-      }
-    }
-  }
-
-  for (auto piece : player->opponent->pieces)
-  {
-    int i = getIndex(piece->rank, piece->file);
-
-    if (piece->type == "King")
-      attacked |= board.getKingMoves(their_color, i, attack);
-    else if (piece->type == "Queen")
-      attacked |= board.getQueenMoves(their_color, i, attack);
-    else if (piece->type == "Rook")
-      attacked |= board.getRookMoves(their_color, i, attack);
-    else if (piece->type == "Bishop")
-      attacked |= board.getBishopMoves(their_color, i, attack);
-    else if (piece->type == "Knight")
-      attacked |= board.getKnightMoves(their_color, i, attack);
-    else if (piece->type == "Pawn")
-      attacked |= board.getPawnAttacks(their_color, i, attack);
   }
 
   if (game->moves.size() > 0)
@@ -252,277 +125,269 @@ bool AI::run_turn()
     }
   }
 
-  // if (player->color == "Black")
-  // {
-  //   for (int i = 0; i < BOARD_SIZE; i++)
-  //   {
-  //     if (board.black[KING][i] == 1)
-  //     {
-  //       // cout << board.getKingMoves(BLACK, i, attack) << " B K\t" << i << endl;
-  //       piece_to_move.piece_moves = board.getKingMoves(BLACK, i, attack);
-  //
-  //       if (piece_to_move.piece_moves.count() > 0)
-  //       {
-  //         piece_to_move.piece_rank = getRank(i);
-  //         piece_to_move.piece_file = getFile(i);
-  //         valid_pieces.push_back(piece_to_move);
-  //       }
-  //     }
-  //
-  //     if (board.black[QUEEN][i] == 1)
-  //     {
-  //       // cout << board.getQueenMoves(BLACK, i, attack) << " B Q\t" << i << endl;
-  //       piece_to_move.piece_moves = board.getQueenMoves(BLACK, i, attack);
-  //
-  //       if (piece_to_move.piece_moves.count() > 0)
-  //       {
-  //         piece_to_move.piece_rank = getRank(i);
-  //         piece_to_move.piece_file = getFile(i);
-  //         valid_pieces.push_back(piece_to_move);
-  //       }
-  //     }
-  //
-  //     if (board.black[ROOKS][i] == 1)
-  //     {
-  //       // cout << board.getRookMoves(BLACK, i, attack) << " B R\t" << i << endl;
-  //       piece_to_move.piece_moves = board.getRookMoves(BLACK, i, attack);
-  //
-  //       if (piece_to_move.piece_moves.count() > 0)
-  //       {
-  //         piece_to_move.piece_rank = getRank(i);
-  //         piece_to_move.piece_file = getFile(i);
-  //         valid_pieces.push_back(piece_to_move);
-  //       }
-  //     }
-  //
-  //     if (board.black[BISHOPS][i] == 1)
-  //     {
-  //       // cout << board.getBishopMoves(BLACK, i, attack) << " B B\t" << i << endl;
-  //       piece_to_move.piece_moves = board.getBishopMoves(BLACK, i, attack);
-  //
-  //       if (piece_to_move.piece_moves.count() > 0)
-  //       {
-  //         piece_to_move.piece_rank = getRank(i);
-  //         piece_to_move.piece_file = getFile(i);
-  //         valid_pieces.push_back(piece_to_move);
-  //       }
-  //     }
-  //
-  //     if (board.black[KNIGHTS][i] == 1)
-  //     {
-  //       // cout << board.getKnightMoves(BLACK, i, attack) << " B N\t" << i << endl;
-  //       piece_to_move.piece_moves = board.getKnightMoves(BLACK, i, attack);
-  //
-  //       if (piece_to_move.piece_moves.count() > 0)
-  //       {
-  //         piece_to_move.piece_rank = getRank(i);
-  //         piece_to_move.piece_file = getFile(i);
-  //         valid_pieces.push_back(piece_to_move);
-  //       }
-  //     }
-  //
-  //     if (board.black[PAWNS][i] == 1)
-  //     {
-  //       // cout << board.getPawnMoves(BLACK, i, attack) << " B P\t" << i << endl;
-  //       piece_to_move.piece_moves = board.getPawnMoves(BLACK, i, attack);
-  //
-  //       if (can_en_passant)
-  //       {
-  //         int index = getIndex(last_move[1] + 1, last_move[0] + "");
-  //
-  //         if (attack.attacking_b_pawn[i][index] == 1)
-  //           piece_to_move.piece_moves[index] = 1;
-  //       }
-  //
-  //       if (piece_to_move.piece_moves.count() > 0)
-  //       {
-  //         piece_to_move.piece_rank = getRank(i);
-  //         piece_to_move.piece_file = getFile(i);
-  //         valid_pieces.push_back(piece_to_move);
-  //       }
-  //     }
-  //   }
-  // }
-  //
-  // else // my color is white
-  // {
-  //   for (int i = 0; i < BOARD_SIZE; i++)
-  //   {
-  //     if (board.white[KING][i] == 1)
-  //     {
-  //       // cout << board.getKingMoves(WHITE, i, attack) << " W K\t" << i << endl;
-  //       piece_to_move.piece_moves = board.getKingMoves(WHITE, i, attack);
-  //
-  //       if (piece_to_move.piece_moves.count() > 0)
-  //       {
-  //         piece_to_move.piece_rank = getRank(i);
-  //         piece_to_move.piece_file = getFile(i);
-  //         valid_pieces.push_back(piece_to_move);
-  //       }
-  //     }
-  //
-  //     if (board.white[QUEEN][i] == 1)
-  //     {
-  //       // cout << board.getQueenMoves(WHITE, i, attack) << " W Q\t" << i << endl;
-  //       piece_to_move.piece_moves = board.getQueenMoves(WHITE, i, attack);
-  //
-  //       if (piece_to_move.piece_moves.count() > 0)
-  //       {
-  //         piece_to_move.piece_rank = getRank(i);
-  //         piece_to_move.piece_file = getFile(i);
-  //         valid_pieces.push_back(piece_to_move);
-  //       }
-  //     }
-  //
-  //     if (board.white[ROOKS][i] == 1)
-  //     {
-  //         // cout << board.getRookMoves(WHITE, i, attack) << " W R\t" << i << endl;
-  //         piece_to_move.piece_moves = board.getRookMoves(WHITE, i, attack);
-  //
-  //         if (piece_to_move.piece_moves.count() > 0)
-  //         {
-  //           piece_to_move.piece_rank = getRank(i);
-  //           piece_to_move.piece_file = getFile(i);
-  //           valid_pieces.push_back(piece_to_move);
-  //         }
-  //     }
-  //
-  //     if (board.white[BISHOPS][i] == 1)
-  //     {
-  //       // cout << board.getBishopMoves(WHITE, i, attack) << " W B\t" << i << endl;
-  //       piece_to_move.piece_moves = board.getBishopMoves(WHITE, i, attack);
-  //
-  //       if (piece_to_move.piece_moves.count() > 0)
-  //       {
-  //         piece_to_move.piece_rank = getRank(i);
-  //         piece_to_move.piece_file = getFile(i);
-  //         valid_pieces.push_back(piece_to_move);
-  //       }
-  //     }
-  //
-  //     if (board.white[KNIGHTS][i] == 1)
-  //     {
-  //       // cout << board.getKnightMoves(WHITE, i, attack) << " W N\t" << i << endl;
-  //       piece_to_move.piece_moves = board.getKnightMoves(WHITE, i, attack);
-  //
-  //       if (piece_to_move.piece_moves.count() > 0)
-  //       {
-  //         piece_to_move.piece_rank = getRank(i);
-  //         piece_to_move.piece_file = getFile(i);
-  //         valid_pieces.push_back(piece_to_move);
-  //       }
-  //     }
-  //
-  //     if (board.white[PAWNS][i] == 1)
-  //     {
-  //       // cout << board.getPawnMoves(WHITE, i, attack) << " W P\t" << i << endl;
-  //       piece_to_move.piece_moves = board.getPawnMoves(WHITE, i, attack);
-  //
-  //       if (can_en_passant)
-  //       {
-  //         int index = getIndex(last_move[1] - 1, last_move[0] + "");
-  //
-  //         if (attack.attacking_w_pawn[i][index] == 1)
-  //           piece_to_move.piece_moves[index] = 1;
-  //       }
-  //
-  //       if (piece_to_move.piece_moves.count() > 0)
-  //       {
-  //         piece_to_move.piece_rank = getRank(i);
-  //         piece_to_move.piece_file = getFile(i);
-  //         valid_pieces.push_back(piece_to_move);
-  //       }
-  //     }
-  //   }
-  // }
-
-  // if king in check, fix it
-  // otherwise
-  int r = rand() % valid_pieces.size();
-  PieceToMove rand_piece = valid_pieces[r];
-  int i = rand() % rand_piece.piece_moves.count() + 1;
-  int rand_move = -1;
-
-  while (i != 0)
+  for (auto piece : player->pieces)
   {
-    rand_move++;
-
-    if (rand_piece.piece_moves[rand_move] == 1)
-      i--;
+    if (piece->type == "King")
+      king_location = getIndex(piece->rank, piece->file);
   }
 
-  if (in_check)
-    cout << "THE KING IS CHECKED!" << endl;
+  for (auto piece : player->opponent->pieces)
+  {
+    int i = getIndex(piece->rank, piece->file);
 
-  int rand_rank = getRank(rand_move);
-  string rand_file = getFile(rand_move);
+    if (piece->type == "King")
+      attacked |= board.getKingMoves(their_color, i, attack);
+    else if (piece->type == "Queen")
+      attacked |= board.getQueenMoves(their_color, i, attack);
+    else if (piece->type == "Rook")
+      attacked |= board.getRookMoves(their_color, i, attack);
+    else if (piece->type == "Bishop")
+      attacked |= board.getBishopMoves(their_color, i, attack);
+    else if (piece->type == "Knight")
+      attacked |= board.getKnightMoves(their_color, i, attack);
+    else if (piece->type == "Pawn")
+      attacked |= board.getPawnAttacks(their_color, i, attack);
+  }
+
+  if (attacked[king_location] == 1)
+    in_check = true;
 
   for (auto piece : player->pieces)
   {
-    if (piece->file == rand_piece.piece_file && piece->rank == rand_piece.piece_rank)
+    int i = getIndex(piece->rank, piece->file);
+
+    if (piece->type == "King")
     {
-      cout << endl << piece->type << " on " << rand_piece.piece_file
-        << piece->rank << " can move to:" << endl;
+      if (attacked[getIndex(piece->rank, piece->file)] == 1)
+        in_check = true;
 
-      for (int i = 0; i < rand_piece.piece_moves.size(); i++)
+      piece_to_move.piece_moves = board.getKingMoves(my_color, i, attack) & ~attacked;
+
+      if (piece_to_move.piece_moves.count() > 0)
       {
-        if (rand_piece.piece_moves[i] == 1)
-        {
-          cout << "\t" << getFile(i) << getRank(i) << endl;
+        piece_to_move.piece_rank = getRank(i);
+        piece_to_move.piece_file = getFile(i);
+        piece_to_move.piece_type = "King";
+        valid_pieces.push_back(piece_to_move);
+      }
+    }
 
-          // // promotions
-          // if (piece->type == "Pawn" && (getRank(i) == HEIGHT_WIDTH || getRank(i) == 0))
-          // {
-          //   piece->move(rand_file, rand_rank, "Queen");
-          // }
-        }
+    else if (piece->type == "Queen")
+    {
+      piece_to_move.piece_moves = board.getQueenMoves(my_color, i, attack);
+
+      if (piece_to_move.piece_moves.count() > 0)
+      {
+        piece_to_move.piece_rank = getRank(i);
+        piece_to_move.piece_file = getFile(i);
+        piece_to_move.piece_type = "Queen";
+        valid_pieces.push_back(piece_to_move);
+      }
+    }
+
+    else if (piece->type == "Rook")
+    {
+      piece_to_move.piece_moves = board.getRookMoves(my_color, i, attack);
+
+      if (piece_to_move.piece_moves.count() > 0)
+      {
+        piece_to_move.piece_rank = getRank(i);
+        piece_to_move.piece_file = getFile(i);
+        piece_to_move.piece_type = "Rook";
+        valid_pieces.push_back(piece_to_move);
+      }
+    }
+
+    else if (piece->type == "Bishop")
+    {
+      piece_to_move.piece_moves = board.getBishopMoves(my_color, i, attack);
+
+      if (piece_to_move.piece_moves.count() > 0)
+      {
+        piece_to_move.piece_rank = getRank(i);
+        piece_to_move.piece_file = getFile(i);
+        piece_to_move.piece_type = "Bishop";
+        valid_pieces.push_back(piece_to_move);
+      }
+    }
+
+    else if (piece->type == "Knight")
+    {
+      piece_to_move.piece_moves = board.getKnightMoves(my_color, i, attack);
+
+      if (piece_to_move.piece_moves.count() > 0)
+      {
+        piece_to_move.piece_rank = getRank(i);
+        piece_to_move.piece_file = getFile(i);
+        piece_to_move.piece_type = "Knight";
+        valid_pieces.push_back(piece_to_move);
+      }
+    }
+
+    else if (piece->type == "Pawn")
+    {
+      piece_to_move.piece_moves = board.getPawnMoves(my_color, i, attack);
+
+      if (can_en_passant)
+      {
+        int index = getIndex(last_move[1] + 1, last_move[0] + "");
+
+        if (attack.attacking_b_pawn[i][index] == 1)
+          piece_to_move.piece_moves[index] = 1;
       }
 
-      piece->move(rand_file, rand_rank, "Queen");
-      break;
+      if (piece_to_move.piece_moves.count() > 0)
+      {
+        piece_to_move.piece_rank = getRank(i);
+        piece_to_move.piece_file = getFile(i);
+        piece_to_move.piece_type = "Pawn";
+        valid_pieces.push_back(piece_to_move);
+      }
     }
   }
 
-  // cout << endl;
-  // cout << "BLACK------------" << endl;
-  // for (int i = 0; i < NUM_TYPES; i++)
-  //   cout << board.black[i] << endl;
-  //
-  // cout << board.b_pieces << endl << endl;
-  //
-  // cout << "WHITE------------" << endl;
-  // for (int i = 0; i < NUM_TYPES; i++)
-  //   cout << board.white[i] << endl;
-  //
-  // cout << board.w_pieces << endl << endl;
-  // cout << board.all_pieces << endl;
-  // cout << endl << endl << endl;
+  for (int i = 0; i < valid_pieces.size(); i++)
+  {
+    int num_moves = valid_pieces[i].piece_moves.count();
+    int j = 0;
 
-  // Here is where you'll want to code your AI.
+    while (num_moves != 0)
+    {
+      if (valid_pieces[i].piece_moves[j] == 1)
+      {
+        NewState state;
+        Chessboard new_board;
+        vector<BasicPiece> new_black = black_pieces;
+        vector<BasicPiece> new_white = white_pieces;
 
-  // We've provided sample code that:
-  //    1) prints the board to the console
-  //    2) prints the opponent's last move to the console
-  //    3) prints how much time remaining this AI has to calculate moves
-  //    4) makes a random (and probably invalid) move.
+        if (my_color == BLACK)
+        {
+          int current_index = getIndex(valid_pieces[i].piece_rank, valid_pieces[i].piece_file);
 
-  // 1) print the board to the console
-  // print_current_board();
+          for (int k = 0; k < new_black.size(); k++)
+          {
+            // found the piece we want to move
+            if (new_black[k].index == current_index)
+            {
+              // move the piece to its new index
+              new_black[k].index = j;
+              break;
+            }
+          }
+        }
 
-  // 2) print the opponent's last move to the console
-  // if(game->moves.size() > 0)
-  // {
-  //   std::cout << "Opponent's Last Move: '" << game->moves[game->moves.size() - 1]->san << "'" << std::endl;
-  // }
-  //
-  // // // 3) print how much time remaining this AI has to calculate moves
-  // std::cout << "Time Remaining: " << player->time_remaining << " ns" << std::endl;
+        else // my color is white
+        {
+          int current_index = getIndex(valid_pieces[i].piece_rank, valid_pieces[i].piece_file);
 
-  // 4) make a random (and probably invalid) move.
-  // chess::Piece random_piece = player->pieces[rand() % player->pieces.size()];
-  // std::string random_file(1, 'a' + rand() % 8);
-  // int random_rank = (rand() % 8) + 1;
-  // random_piece->move(random_file, random_rank);
+          for (int k = 0; k < new_black.size(); k++)
+          {
+            // found the piece we want to move
+            if (new_white[k].index == current_index)
+            {
+              // move the piece to its new index
+              new_white[k].index = j;
+              break;
+            }
+          }
+        }
+
+        state.board.readBoard(new_black, new_white);
+        state.piece = valid_pieces[i];
+        possible_states.push_back(state);
+        num_moves--;
+      }
+
+      j++;
+    }
+  }
+
+  int i = 0;
+  while (i < possible_states.size())
+  {
+    int king_location = -1;
+
+    if (my_color == BLACK)
+    {
+      for (int j = 0; j < BOARD_SIZE; j++)
+      {
+        if (possible_states[i].board.black[KING][j] == 1)
+        {
+          king_location = possible_states[i].board.black[KING][j];
+          break;
+        }
+      }
+
+      if (isChecked(king_location, possible_states[i].board))
+      {
+        possible_states.erase(possible_states.begin() + i);
+        i--; // cancel out the increment that comes later
+      }
+    }
+
+    else // my color is white
+    {
+      for (int j = 0; j < BOARD_SIZE; j++)
+      {
+        if (possible_states[i].board.white[KING][j] == 1)
+        {
+          king_location = possible_states[i].board.white[KING][j];
+          break;
+        }
+      }
+
+      if (isChecked(king_location, possible_states[i].board))
+      {
+        possible_states.erase(possible_states.begin() + i);
+        i--; // cancel out the increment that comes later
+      }
+    }
+
+    i++;
+  }
+
+  // else // not in check
+  {
+    int r = rand() % possible_states.size();
+    PieceToMove rand_piece = possible_states[r].piece;
+    int i = rand() % rand_piece.piece_moves.count() + 1;
+    int rand_move = -1;
+
+    while (i != 0)
+    {
+      rand_move++;
+
+      if (rand_piece.piece_moves[rand_move] == 1)
+        i--;
+    }
+
+    int rand_rank = getRank(rand_move);
+    string rand_file = getFile(rand_move);
+
+    for (auto piece : player->pieces)
+    {
+      if (piece->file == rand_piece.piece_file && piece->rank == rand_piece.piece_rank)
+      {
+        cout << endl << piece->type << " on " << rand_piece.piece_file
+          << piece->rank << " can move to:" << endl;
+
+        for (int i = 0; i < rand_piece.piece_moves.size(); i++)
+        {
+          if (rand_piece.piece_moves[i] == 1)
+            cout << "\t" << getFile(i) << getRank(i) << endl;
+        }
+
+        // default promote to Queen
+        piece->move(rand_file, rand_rank, "Queen");
+        break;
+      }
+    }
+  }
+
+  print_current_board();
+  cout << "Time Remaining: " << player->time_remaining << " ns" << endl;
+  if(game->moves.size() > 0)
+    cout << "Opponent's Last Move: '" << game->moves[game->moves.size() - 1]->san << "'" << endl;
 
   return true; // to signify we are done with our turn.
 }
@@ -537,7 +402,7 @@ void AI::print_current_board()
 {
   for(int rank = 9; rank >= -1; rank--)
   {
-    std::string str = "";
+    string str = "";
     if(rank == 9 || rank == 0) // then the top or bottom of the board
     {
       str = "   +------------------------+";
@@ -549,12 +414,12 @@ void AI::print_current_board()
     else // board
     {
       str += " ";
-      str += std::to_string(rank);
+      str += to_string(rank);
       str += " |";
       // fill in all the files with pieces at the current rank
       for(int file_offset = 0; file_offset < 8; file_offset++)
       {
-        std::string file(1, 'a' + file_offset); // start at a, with with file offset increasing the char;
+        string file(1, 'a' + file_offset); // start at a, with with file offset increasing the char;
         chess::Piece current_piece = nullptr;
         for(const auto& piece : game->pieces)
         {
@@ -589,7 +454,7 @@ void AI::print_current_board()
       str += "|";
     }
 
-    std::cout << str << std::endl;
+    cout << str << endl;
   }
 }
 
