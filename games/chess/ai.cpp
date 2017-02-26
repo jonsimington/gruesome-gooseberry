@@ -184,7 +184,7 @@ bool AI::run_turn()
         {
           int index = getIndex(last_move[1] + 1, last_move[0] + "");
 
-          if (attack.moving_b_pawn[i][index] == 1)
+          if (attack.attacking_b_pawn[i][index] == 1)
             piece_to_move.piece_moves[index] = 1;
         }
 
@@ -276,7 +276,7 @@ bool AI::run_turn()
         {
           int index = getIndex(last_move[1] - 1, last_move[0] + "");
 
-          if (attack.moving_w_pawn[i][index] == 1)
+          if (attack.attacking_w_pawn[i][index] == 1)
             piece_to_move.piece_moves[index] = 1;
         }
 
@@ -326,10 +326,16 @@ bool AI::run_turn()
         if (rand_piece.piece_moves[i] == 1)
         {
           cout << "\t" << getFile(i) << getRank(i) << endl;
+
+          // // promotions
+          // if (piece->type == "Pawn" && (getRank(i) == HEIGHT_WIDTH || getRank(i) == 0))
+          // {
+          //   piece->move(rand_file, rand_rank, "Queen");
+          // }
         }
       }
 
-      piece->move(rand_file, rand_rank);
+      piece->move(rand_file, rand_rank, "Queen");
       break;
     }
   }
