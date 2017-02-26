@@ -5,6 +5,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "chessboard.h"
+// #include "game.hpp"
 using namespace std;
 
 int getRank(const int i)
@@ -78,6 +79,8 @@ Chessboard::Chessboard(const Chessboard& b)
 // places black and white pieces according to standard chess rules
 void Chessboard::readBoard()
 {
+  // int num_pieces = cpp_client::chess::Game->pieces.size();
+
   // kings
   black[KING][B_KING] = 1;
   white[KING][W_KING] = 1;

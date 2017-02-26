@@ -236,11 +236,11 @@ bool AI::run_turn()
     }
   }
 
-  for (int i = 0; i < valid_pieces.size(); i++)
-  {
-    cout << valid_pieces[i].piece_moves << endl
-      << valid_pieces[i].piece_rank << " " << valid_pieces[i].piece_file << endl;
-  }
+  // for (int i = 0; i < valid_pieces.size(); i++)
+  // {
+  //   cout << valid_pieces[i].piece_moves << endl
+  //     << valid_pieces[i].piece_rank << " " << valid_pieces[i].piece_file << endl;
+  // }
 
   // if king in check, fix it
   // otherwise
@@ -257,25 +257,30 @@ bool AI::run_turn()
       i--;
   }
 
-  cout << "piece -- rank: " << rand_piece.piece_rank << ", file: " << rand_piece.piece_file << endl;
+  // cout << "piece -- rank: " << rand_piece.piece_rank << ", file: " << rand_piece.piece_file << endl;
   int rand_rank = getRank(rand_move);
   string rand_file = getFile(rand_move);
-  cout << "move -- rank: " << rand_rank << ", file: " << rand_file << endl;
+  // cout << "move -- rank: " << rand_rank << ", file: " << rand_file << endl;
 
   for (auto piece : player->pieces)
-  {
+  {    
     if (piece->file == rand_piece.piece_file && piece->rank == rand_piece.piece_rank)
     {
+      cout << endl << piece->type << " on " << rand_piece.piece_file
+        << piece->rank << " can move to:" << endl;
+
+      for (int i = 0; i < rand_piece.piece_moves.size(); i++)
+      {
+        if (rand_piece.piece_moves[i] == 1)
+        {
+          cout << "\t" << getFile(i) << getRank(i) << endl;
+        }
+      }
+
       piece->move(rand_file, rand_rank);
       break;
     }
   }
-
-  /*---------------
-  At this point, I know where the piece is going to go. I now need
-  to identify the piece so that I can tell the framework which piece
-  to move.
-  ---------------*/
 
   // cout << endl;
   // cout << "BLACK------------" << endl;
