@@ -61,6 +61,7 @@ bool AI::run_turn()
   vector<BasicPiece> white_pieces;
   vector<NewState> possible_states;
 
+  // get board setup
   for (auto piece : game->pieces)
   {
     BasicPiece p;
@@ -79,8 +80,10 @@ bool AI::run_turn()
     }
   }
 
+  // generate bitboard from piece setup
   board.readBoard(black_pieces, white_pieces);
 
+  // generate all available attacks for every piece at any location
   AttackPiece attack;
   attack.generateAttacks();
 
@@ -98,6 +101,7 @@ bool AI::run_turn()
   bitset<BOARD_SIZE> attacked = 0;
   bitset<BOARD_SIZE> king_check = 0;
 
+  // initialize colors
   if (player->color == "Black")
   {
     my_color = BLACK;
@@ -110,6 +114,7 @@ bool AI::run_turn()
     their_color = BLACK;
   }
 
+  // check if en passant is possible
   if (game->moves.size() > 0)
   {
     last_move = game->moves[game->moves.size() - 1]->san;
@@ -119,112 +124,60 @@ bool AI::run_turn()
     {
       // if the opponent advanced a pawn two squares from the start location
       if (abs(game->moves[game->moves.size() - 1]->from_rank - last_move[1]) == EN_PASSANT)
-      {
         can_en_passant = true;
-      }
     }
   }
 
+  // get the current location of the king
   for (auto piece : player->pieces)
   {
     if (piece->type == "King")
       king_location = getIndex(piece->rank, piece->file);
   }
 
-  for (auto piece : player->opponent->pieces)
-  {
-    int i = getIndex(piece->rank, piece->file);
+  // find all squares attacked by the opponent
+  attacked = getAttacked(their_color, board, attack);
 
-    if (piece->type == "King")
-      attacked |= board.getKingMoves(their_color, i, attack);
-    else if (piece->type == "Queen")
-      attacked |= board.getQueenMoves(their_color, i, attack);
-    else if (piece->type == "Rook")
-      attacked |= board.getRookMoves(their_color, i, attack);
-    else if (piece->type == "Bishop")
-      attacked |= board.getBishopMoves(their_color, i, attack);
-    else if (piece->type == "Knight")
-      attacked |= board.getKnightMoves(their_color, i, attack);
-    else if (piece->type == "Pawn")
-      attacked |= board.getPawnAttacks(their_color, i, attack);
-  }
+  // for (auto piece : player->opponent->pieces)
+  // {
+  //   int i = getIndex(piece->rank, piece->file);
+  //
+  //   if (piece->type == "King")
+  //     attacked |= board.getKingMoves(their_color, i, attack);
+  //   else if (piece->type == "Queen")
+  //     attacked |= board.getQueenMoves(their_color, i, attack);
+  //   else if (piece->type == "Rook")
+  //     attacked |= board.getRookMoves(their_color, i, attack);
+  //   else if (piece->type == "Bishop")
+  //     attacked |= board.getBishopMoves(their_color, i, attack);
+  //   else if (piece->type == "Knight")
+  //     attacked |= board.getKnightMoves(their_color, i, attack);
+  //   else if (piece->type == "Pawn")
+  //     attacked |= board.getPawnAttacks(their_color, i, attack);
+  // }
 
-  if (attacked[king_location] == 1)
+  // king is in check if he's in the any of the attacked squares
+  // if (attacked[king_location] == 1)
+  if (isChecked(attacked, king_location))
     in_check = true;
 
+  // find all movable pieces and their possible moves (don't worry about check)
+  int total = 0;
   for (auto piece : player->pieces)
   {
     int i = getIndex(piece->rank, piece->file);
 
     if (piece->type == "King")
-    {
-      if (attacked[getIndex(piece->rank, piece->file)] == 1)
-        in_check = true;
-
       piece_to_move.piece_moves = board.getKingMoves(my_color, i, attack) & ~attacked;
-
-      if (piece_to_move.piece_moves.count() > 0)
-      {
-        piece_to_move.piece_rank = getRank(i);
-        piece_to_move.piece_file = getFile(i);
-        piece_to_move.piece_type = "King";
-        valid_pieces.push_back(piece_to_move);
-      }
-    }
-
     else if (piece->type == "Queen")
-    {
       piece_to_move.piece_moves = board.getQueenMoves(my_color, i, attack);
-
-      if (piece_to_move.piece_moves.count() > 0)
-      {
-        piece_to_move.piece_rank = getRank(i);
-        piece_to_move.piece_file = getFile(i);
-        piece_to_move.piece_type = "Queen";
-        valid_pieces.push_back(piece_to_move);
-      }
-    }
-
     else if (piece->type == "Rook")
-    {
       piece_to_move.piece_moves = board.getRookMoves(my_color, i, attack);
-
-      if (piece_to_move.piece_moves.count() > 0)
-      {
-        piece_to_move.piece_rank = getRank(i);
-        piece_to_move.piece_file = getFile(i);
-        piece_to_move.piece_type = "Rook";
-        valid_pieces.push_back(piece_to_move);
-      }
-    }
-
     else if (piece->type == "Bishop")
-    {
       piece_to_move.piece_moves = board.getBishopMoves(my_color, i, attack);
-
-      if (piece_to_move.piece_moves.count() > 0)
-      {
-        piece_to_move.piece_rank = getRank(i);
-        piece_to_move.piece_file = getFile(i);
-        piece_to_move.piece_type = "Bishop";
-        valid_pieces.push_back(piece_to_move);
-      }
-    }
-
     else if (piece->type == "Knight")
-    {
       piece_to_move.piece_moves = board.getKnightMoves(my_color, i, attack);
-
-      if (piece_to_move.piece_moves.count() > 0)
-      {
-        piece_to_move.piece_rank = getRank(i);
-        piece_to_move.piece_file = getFile(i);
-        piece_to_move.piece_type = "Knight";
-        valid_pieces.push_back(piece_to_move);
-      }
-    }
-
-    else if (piece->type == "Pawn")
+    else // pawn
     {
       piece_to_move.piece_moves = board.getPawnMoves(my_color, i, attack);
 
@@ -235,44 +188,67 @@ bool AI::run_turn()
         if (attack.attacking_b_pawn[i][index] == 1)
           piece_to_move.piece_moves[index] = 1;
       }
+    }
 
-      if (piece_to_move.piece_moves.count() > 0)
-      {
-        piece_to_move.piece_rank = getRank(i);
-        piece_to_move.piece_file = getFile(i);
-        piece_to_move.piece_type = "Pawn";
-        valid_pieces.push_back(piece_to_move);
-      }
+    total += piece_to_move.piece_moves.count();
+    // if the piece can move anywhere
+    if (piece_to_move.piece_moves.count() > 0)
+    {
+      piece_to_move.piece_rank = getRank(i);
+      piece_to_move.piece_file = getFile(i);
+      piece_to_move.piece_type = piece->type;
+      valid_pieces.push_back(piece_to_move);
     }
   }
 
+  // cout << "total: " << total << endl;
+  // cout << "size: " << valid_pieces.size() << endl;
+  // for all movable pieces
   for (int i = 0; i < valid_pieces.size(); i++)
   {
+    // number of pseudo-legal squares the piece can move to
     int num_moves = valid_pieces[i].piece_moves.count();
-    int j = 0;
+    int new_index = 0;
 
+    // while there are still moves to look at
     while (num_moves != 0)
     {
-      if (valid_pieces[i].piece_moves[j] == 1)
+      int location = king_location;
+
+      // if we found a square it can move to
+      if (valid_pieces[i].piece_moves[new_index] == 1)
       {
+        // create a new state and move the current piece to the current square
         NewState state;
-        Chessboard new_board;
         vector<BasicPiece> new_black = black_pieces;
         vector<BasicPiece> new_white = white_pieces;
 
         if (my_color == BLACK)
         {
+          // location of current piece
           int current_index = getIndex(valid_pieces[i].piece_rank, valid_pieces[i].piece_file);
 
+          // for each black piece
           for (int k = 0; k < new_black.size(); k++)
           {
             // found the piece we want to move
             if (new_black[k].index == current_index)
             {
+              // if we're moving the king, update its location
+              if (new_black[k].type == "King")
+                location = new_index;
+
               // move the piece to its new index
-              new_black[k].index = j;
+              new_black[k].index = new_index;
               break;
             }
+          }
+
+          // if there was an opposing piece on new_index, capture it
+          for (int del = 0; del < new_white.size(); del++)
+          {
+            if (new_white[del].index == current_index)
+              new_white.erase(new_white.begin() + del);
           }
         }
 
@@ -280,107 +256,75 @@ bool AI::run_turn()
         {
           int current_index = getIndex(valid_pieces[i].piece_rank, valid_pieces[i].piece_file);
 
-          for (int k = 0; k < new_black.size(); k++)
+          for (int k = 0; k < new_white.size(); k++)
           {
             // found the piece we want to move
             if (new_white[k].index == current_index)
             {
+              // if we're moving the king, update its location
+              if (new_white[k].type == "King")
+                location = new_index;
+
               // move the piece to its new index
-              new_white[k].index = j;
+              new_white[k].index = new_index;
               break;
             }
           }
+
+          for (int del = 0; del < new_black.size(); del++)
+          {
+            if (new_black[del].index == current_index)
+              new_black.erase(new_white.begin() + del);
+          }
         }
 
+        // generate new bitboard
         state.board.readBoard(new_black, new_white);
         state.piece = valid_pieces[i];
-        possible_states.push_back(state);
+
+        bitset<BOARD_SIZE> new_attacked = getAttacked(their_color, state.board, attack);
+        if (!isChecked(attacked, location))
+          possible_states.push_back(state);
+
         num_moves--;
       }
 
-      j++;
+      new_index++;
     }
   }
 
-  int i = 0;
-  while (i < possible_states.size())
+  int r = rand() % possible_states.size();
+  PieceToMove rand_piece = possible_states[r].piece;
+  int m = rand() % rand_piece.piece_moves.count() + 1;
+  int rand_move = -1;
+
+  while (m != 0)
   {
-    int king_location = -1;
+    rand_move++;
 
-    if (my_color == BLACK)
-    {
-      for (int j = 0; j < BOARD_SIZE; j++)
-      {
-        if (possible_states[i].board.black[KING][j] == 1)
-        {
-          king_location = possible_states[i].board.black[KING][j];
-          break;
-        }
-      }
-
-      if (isChecked(king_location, possible_states[i].board))
-      {
-        possible_states.erase(possible_states.begin() + i);
-        i--; // cancel out the increment that comes later
-      }
-    }
-
-    else // my color is white
-    {
-      for (int j = 0; j < BOARD_SIZE; j++)
-      {
-        if (possible_states[i].board.white[KING][j] == 1)
-        {
-          king_location = possible_states[i].board.white[KING][j];
-          break;
-        }
-      }
-
-      if (isChecked(king_location, possible_states[i].board))
-      {
-        possible_states.erase(possible_states.begin() + i);
-        i--; // cancel out the increment that comes later
-      }
-    }
-
-    i++;
+    if (rand_piece.piece_moves[rand_move] == 1)
+      m--;
   }
 
-  // else // not in check
+  int rand_rank = getRank(rand_move);
+  string rand_file = getFile(rand_move);
+
+  for (auto piece : player->pieces)
   {
-    int r = rand() % possible_states.size();
-    PieceToMove rand_piece = possible_states[r].piece;
-    int i = rand() % rand_piece.piece_moves.count() + 1;
-    int rand_move = -1;
-
-    while (i != 0)
+    if (piece->file == rand_piece.piece_file && piece->rank == rand_piece.piece_rank)
     {
-      rand_move++;
+      cout << endl << piece->type << " on " << rand_piece.piece_file
+        << piece->rank << " can move to:" << endl;
 
-      if (rand_piece.piece_moves[rand_move] == 1)
-        i--;
-    }
-
-    int rand_rank = getRank(rand_move);
-    string rand_file = getFile(rand_move);
-
-    for (auto piece : player->pieces)
-    {
-      if (piece->file == rand_piece.piece_file && piece->rank == rand_piece.piece_rank)
+      for (int i = 0; i < rand_piece.piece_moves.size(); i++)
       {
-        cout << endl << piece->type << " on " << rand_piece.piece_file
-          << piece->rank << " can move to:" << endl;
-
-        for (int i = 0; i < rand_piece.piece_moves.size(); i++)
-        {
-          if (rand_piece.piece_moves[i] == 1)
-            cout << "\t" << getFile(i) << getRank(i) << endl;
-        }
-
-        // default promote to Queen
-        piece->move(rand_file, rand_rank, "Queen");
-        break;
+        if (rand_piece.piece_moves[i] == 1)
+          cout << "\t" << getFile(i) << getRank(i) << endl;
       }
+
+      // default promote to Queen
+      piece->move(rand_file, rand_rank, "Queen");
+      break;
     }
   }
 

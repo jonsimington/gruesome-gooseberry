@@ -81,14 +81,55 @@ int getIndex(const int rank, const string file)
   return index;
 }
 
-bool isChecked(const int location, const Chessboard& board)
+bitset<BOARD_SIZE> getAttacked(const string their_color, Chessboard& board, const AttackPiece& attack)
 {
-  bool checked = false;
+  bitset<BOARD_SIZE> attacked = 0;
 
+  // cout << board.all_pieces << endl;
+  for (int i = 0; i < BOARD_SIZE; i++)
+  {
+    if (their_color == BLACK)
+    {
+      if (board.black[KING][i] == 1)
+        attacked |= board.getKingMoves(their_color, i, attack);
+      else if (board.black[QUEEN][i] == 1)
+        attacked |= board.getQueenMoves(their_color, i, attack);
+      else if (board.black[ROOKS][i] == 1)
+        attacked |= board.getRookMoves(their_color, i, attack);
+      else if (board.black[BISHOPS][i] == 1)
+        attacked |= board.getBishopMoves(their_color, i, attack);
+      else if (board.black[KNIGHTS][i] == 1)
+        attacked |= board.getKnightMoves(their_color, i, attack);
+      else if (board.black[PAWNS][i] == 1)
+        attacked |= board.getPawnAttacks(their_color, i, attack);
+    }
 
-  
+    else // they are white
+    {
+      if (board.white[KING][i] == 1)
+        attacked |= board.getKingMoves(their_color, i, attack);
+      else if (board.white[QUEEN][i] == 1)
+        attacked |= board.getQueenMoves(their_color, i, attack);
+      else if (board.white[ROOKS][i] == 1)
+        attacked |= board.getRookMoves(their_color, i, attack);
+      else if (board.white[BISHOPS][i] == 1)
+        attacked |= board.getBishopMoves(their_color, i, attack);
+      else if (board.white[KNIGHTS][i] == 1)
+        attacked |= board.getKnightMoves(their_color, i, attack);
+      else if (board.white[PAWNS][i] == 1)
+        attacked |= board.getPawnAttacks(their_color, i, attack);
+    }
+  }
 
-  return checked;
+  return attacked;
+}
+
+bool isChecked(const bitset<BOARD_SIZE>& attacked, const int location)
+{
+  if (attacked[location] == 1)
+    return true;
+
+  return false;
 }
 
 // this initializes an empty board (i.e. no pieces)

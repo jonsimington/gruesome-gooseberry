@@ -28,8 +28,8 @@ struct PieceToMove
 
 struct BasicPiece
 {
-  string type;
   int index;
+  string type;
 };
 
 // this class holds the locations of all pieces
@@ -63,4 +63,5 @@ struct NewState
   PieceToMove piece;
 };
 
-bool isChecked(const int location, const Chessboard& board);
+bitset<BOARD_SIZE> getAttacked(const string their_color, Chessboard& board, const AttackPiece& attack);
+bool isChecked(const bitset<BOARD_SIZE>& attacked, const int location);
