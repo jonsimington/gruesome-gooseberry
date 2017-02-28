@@ -17,6 +17,7 @@ using namespace std;
 int getIndex(const int rank, const string file);
 int getRank(const int i);
 string getFile(const int i);
+void printBoard(const bitset<BOARD_SIZE>& board);
 
 struct PieceToMove
 {
@@ -60,7 +61,9 @@ public:
 struct NewState
 {
   Chessboard board;
-  PieceToMove piece;
+  // PieceToMove piece;
+  int current_index;
+  int new_index;
 };
 
 bitset<BOARD_SIZE> getAttacked(const string their_color, Chessboard& board, const AttackPiece& attack);

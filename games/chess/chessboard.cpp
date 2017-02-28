@@ -124,6 +124,28 @@ bitset<BOARD_SIZE> getAttacked(const string their_color, Chessboard& board, cons
   return attacked;
 }
 
+void printBoard(const bitset<BOARD_SIZE>& board)
+{
+  int min = 56;
+  int max = 64;
+
+  while (min >= 0)
+  {
+    for (int i = min; i < max; i++)
+    {
+      cout << board[i] << " ";
+    }
+
+    cout << endl;
+
+    min -= 8;
+    max -=8;
+  }
+
+  cout << endl;
+  return;
+}
+
 bool isChecked(const bitset<BOARD_SIZE>& attacked, const int location)
 {
   if (attacked[location] == 1)
@@ -160,9 +182,12 @@ Chessboard::Chessboard(const Chessboard& b)
   }
 }
 
-// places black and white pieces according to standard chess rules
+// places black and white pieces according to current board state
 void Chessboard::readBoard(vector<BasicPiece> blk_pieces, vector<BasicPiece> wht_pieces)
 {
+  // black[QUEEN][63] = 1;
+  // black[QUEEN][0] = 1;
+  // white[KING][32] = 1;
   for (int i = 0; i < blk_pieces.size(); i++)
   {
     if (blk_pieces[i].type == "King")
@@ -236,7 +261,7 @@ bitset<BOARD_SIZE> Chessboard::getQueenMoves(const string c, const int i, const 
   while (slider < BOARD_SIZE)
   {
     // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[i] == 1)
+    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
     {
       // clear all "valid" moves that exist after the invalid/blocked square
       slider += HEIGHT_WIDTH;
@@ -257,7 +282,7 @@ bitset<BOARD_SIZE> Chessboard::getQueenMoves(const string c, const int i, const 
   while (slider >= 0)
   {
     // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[i] == 1)
+    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
     {
       // clear all "valid" moves that exist after the invalid/blocked square
       slider -= HEIGHT_WIDTH;
@@ -278,7 +303,7 @@ bitset<BOARD_SIZE> Chessboard::getQueenMoves(const string c, const int i, const 
   while (slider % HEIGHT_WIDTH != RIGHT_EDGE && slider < BOARD_SIZE)
   {
     // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[i] == 1)
+    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
     {
       // clear all "valid" moves that exist after the invalid/blocked square
       slider += LEFT_RIGHT;
@@ -299,7 +324,7 @@ bitset<BOARD_SIZE> Chessboard::getQueenMoves(const string c, const int i, const 
   while (slider % HEIGHT_WIDTH != 0 && slider >= 0)
   {
     // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[i] == 1)
+    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
     {
       // clear all "valid" moves that exist after the invalid/blocked square
       slider -= LEFT_RIGHT;
@@ -320,7 +345,7 @@ bitset<BOARD_SIZE> Chessboard::getQueenMoves(const string c, const int i, const 
   while (slider < BOARD_SIZE && slider % HEIGHT_WIDTH != RIGHT_EDGE)
   {
     // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[i] == 1)
+    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
     {
       // clear all "valid" moves that exist after the invalid/blocked square
       slider += NE_SW_DIAGONAL;
@@ -341,7 +366,7 @@ bitset<BOARD_SIZE> Chessboard::getQueenMoves(const string c, const int i, const 
   while (slider >= 0 && slider % HEIGHT_WIDTH != RIGHT_EDGE)
   {
     // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[i] == 1)
+    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
     {
       // clear all "valid" moves that exist after the invalid/blocked square
       slider -= NW_SE_DIAGONAL;
@@ -362,7 +387,7 @@ bitset<BOARD_SIZE> Chessboard::getQueenMoves(const string c, const int i, const 
   while (slider < BOARD_SIZE && slider % HEIGHT_WIDTH != RIGHT_EDGE)
   {
     // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[i] == 1)
+    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
     {
       // clear all "valid" moves that exist after the invalid/blocked square
       slider += NW_SE_DIAGONAL;
@@ -383,7 +408,7 @@ bitset<BOARD_SIZE> Chessboard::getQueenMoves(const string c, const int i, const 
   while (slider >= 0 && slider % HEIGHT_WIDTH != 0)
   {
     // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[i] == 1)
+    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
     {
       // clear all "valid" moves that exist after the invalid/blocked square
       slider -= NE_SW_DIAGONAL;
@@ -420,7 +445,7 @@ bitset<BOARD_SIZE> Chessboard::getRookMoves(const string c, const int i, const A
   while (slider < BOARD_SIZE)
   {
     // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[i] == 1)
+    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
     {
       // clear all "valid" moves that exist after the invalid/blocked square
       slider += HEIGHT_WIDTH;
@@ -441,7 +466,7 @@ bitset<BOARD_SIZE> Chessboard::getRookMoves(const string c, const int i, const A
   while (slider >= 0)
   {
     // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[i] == 1)
+    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
     {
       // clear all "valid" moves that exist after the invalid/blocked square
       slider -= HEIGHT_WIDTH;
@@ -462,7 +487,7 @@ bitset<BOARD_SIZE> Chessboard::getRookMoves(const string c, const int i, const A
   while (slider % HEIGHT_WIDTH != RIGHT_EDGE && slider < BOARD_SIZE)
   {
     // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[i] == 1)
+    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
     {
       // clear all "valid" moves that exist after the invalid/blocked square
       slider += LEFT_RIGHT;
@@ -483,7 +508,7 @@ bitset<BOARD_SIZE> Chessboard::getRookMoves(const string c, const int i, const A
   while (slider % HEIGHT_WIDTH != 0 && slider >= 0)
   {
     // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[i] == 1)
+    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
     {
       // clear all "valid" moves that exist after the invalid/blocked square
       slider -= LEFT_RIGHT;
@@ -521,7 +546,7 @@ bitset<BOARD_SIZE> Chessboard::getBishopMoves(const string c, const int i, const
   while (slider < BOARD_SIZE && slider % HEIGHT_WIDTH != RIGHT_EDGE)
   {
     // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[i] == 1)
+    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
     {
       // clear all "valid" moves that exist after the invalid/blocked square
       slider += NE_SW_DIAGONAL;
@@ -542,7 +567,7 @@ bitset<BOARD_SIZE> Chessboard::getBishopMoves(const string c, const int i, const
   while (slider >= 0 && slider % HEIGHT_WIDTH != RIGHT_EDGE)
   {
     // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[i] == 1)
+    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
     {
       // clear all "valid" moves that exist after the invalid/blocked square
       slider -= NW_SE_DIAGONAL;
@@ -563,7 +588,7 @@ bitset<BOARD_SIZE> Chessboard::getBishopMoves(const string c, const int i, const
   while (slider < BOARD_SIZE && slider % HEIGHT_WIDTH != RIGHT_EDGE)
   {
     // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[i] == 1)
+    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
     {
       // clear all "valid" moves that exist after the invalid/blocked square
       slider += NW_SE_DIAGONAL;
@@ -584,7 +609,7 @@ bitset<BOARD_SIZE> Chessboard::getBishopMoves(const string c, const int i, const
   while (slider >= 0 && slider % HEIGHT_WIDTH != 0)
   {
     // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[i] == 1)
+    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
     {
       // clear all "valid" moves that exist after the invalid/blocked square
       slider -= NE_SW_DIAGONAL;

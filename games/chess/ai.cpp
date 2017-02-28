@@ -56,6 +56,7 @@ void AI::ended(bool won, const string& reason)
 /// <returns>Represents if you want to end your turn. True means end your turn, False means to keep your turn going and re-call this function.</returns>
 bool AI::run_turn()
 {
+  cout << endl << "start!" << endl;
   Chessboard board;
   vector<BasicPiece> black_pieces;
   vector<BasicPiece> white_pieces;
@@ -89,17 +90,14 @@ bool AI::run_turn()
 
   int num_moves = 0;
   int num_pieces = player->pieces.size();
-  bitset<BOARD_SIZE> potential_pieces = 0;
-  vector<PieceToMove> valid_pieces;
+  vector<PieceToMove> movable_pieces;
   PieceToMove piece_to_move;
   string last_move;
   bool can_en_passant = false;
   int king_location;
-  bool in_check = false;
   string my_color;
   string their_color;
   bitset<BOARD_SIZE> attacked = 0;
-  bitset<BOARD_SIZE> king_check = 0;
 
   // initialize colors
   if (player->color == "Black")
@@ -132,43 +130,33 @@ bool AI::run_turn()
   for (auto piece : player->pieces)
   {
     if (piece->type == "King")
+    {
       king_location = getIndex(piece->rank, piece->file);
+      break;
+    }
   }
 
-  // find all squares attacked by the opponent
-  attacked = getAttacked(their_color, board, attack);
-
-  // for (auto piece : player->opponent->pieces)
-  // {
-  //   int i = getIndex(piece->rank, piece->file);
+  // cout << "Queen at 0 can attack: " << endl;
+  // printBoard(attack.attacking_queen[0]);
   //
-  //   if (piece->type == "King")
-  //     attacked |= board.getKingMoves(their_color, i, attack);
-  //   else if (piece->type == "Queen")
-  //     attacked |= board.getQueenMoves(their_color, i, attack);
-  //   else if (piece->type == "Rook")
-  //     attacked |= board.getRookMoves(their_color, i, attack);
-  //   else if (piece->type == "Bishop")
-  //     attacked |= board.getBishopMoves(their_color, i, attack);
-  //   else if (piece->type == "Knight")
-  //     attacked |= board.getKnightMoves(their_color, i, attack);
-  //   else if (piece->type == "Pawn")
-  //     attacked |= board.getPawnAttacks(their_color, i, attack);
-  // }
-
-  // king is in check if he's in the any of the attacked squares
-  // if (attacked[king_location] == 1)
-  if (isChecked(attacked, king_location))
-    in_check = true;
+  // attacked = getAttacked(their_color, board, attack);
+  // cout << their_color << " attacks: " << endl;
+  // printBoard(attacked);
+  // if (isChecked(attacked, king_location))
+  //   cout << "KING IS CHECKED -----------" << endl;
+  //
+  // cout << my_color << " king is on:" << endl;
+  // if (my_color == BLACK)
+  //   printBoard(board.black[KING]);
+  // else printBoard(board.white[KING]);
 
   // find all movable pieces and their possible moves (don't worry about check)
-  int total = 0;
   for (auto piece : player->pieces)
   {
     int i = getIndex(piece->rank, piece->file);
 
-    if (piece->type == "King")
-      piece_to_move.piece_moves = board.getKingMoves(my_color, i, attack) & ~attacked;
+    if (piece->type == "King") // king won't move into check
+      piece_to_move.piece_moves = (board.getKingMoves(my_color, i, attack) & ~attacked);
     else if (piece->type == "Queen")
       piece_to_move.piece_moves = board.getQueenMoves(my_color, i, attack);
     else if (piece->type == "Rook")
@@ -190,24 +178,22 @@ bool AI::run_turn()
       }
     }
 
-    total += piece_to_move.piece_moves.count();
-    // if the piece can move anywhere
+    // if the piece can move to any other squares
     if (piece_to_move.piece_moves.count() > 0)
     {
       piece_to_move.piece_rank = getRank(i);
       piece_to_move.piece_file = getFile(i);
       piece_to_move.piece_type = piece->type;
-      valid_pieces.push_back(piece_to_move);
+      movable_pieces.push_back(piece_to_move);
     }
   }
 
-  // cout << "total: " << total << endl;
-  // cout << "size: " << valid_pieces.size() << endl;
   // for all movable pieces
-  for (int i = 0; i < valid_pieces.size(); i++)
+  for (int i = 0; i < movable_pieces.size(); i++)
   {
     // number of pseudo-legal squares the piece can move to
-    int num_moves = valid_pieces[i].piece_moves.count();
+    int num_moves = movable_pieces[i].piece_moves.count();
+    int current_index = getIndex(movable_pieces[i].piece_rank, movable_pieces[i].piece_file);
     int new_index = 0;
 
     // while there are still moves to look at
@@ -216,30 +202,27 @@ bool AI::run_turn()
       int location = king_location;
 
       // if we found a square it can move to
-      if (valid_pieces[i].piece_moves[new_index] == 1)
+      if (movable_pieces[i].piece_moves[new_index] == 1)
       {
-        // create a new state and move the current piece to the current square
+        // create a new state and move piece i to square new_index
         NewState state;
         vector<BasicPiece> new_black = black_pieces;
         vector<BasicPiece> new_white = white_pieces;
 
         if (my_color == BLACK)
         {
-          // location of current piece
-          int current_index = getIndex(valid_pieces[i].piece_rank, valid_pieces[i].piece_file);
-
           // for each black piece
-          for (int k = 0; k < new_black.size(); k++)
+          for (int b = 0; b < new_black.size(); b++)
           {
             // found the piece we want to move
-            if (new_black[k].index == current_index)
+            if (new_black[b].index == current_index)
             {
               // if we're moving the king, update its location
-              if (new_black[k].type == "King")
+              if (new_black[b].type == "King")
                 location = new_index;
 
               // move the piece to its new index
-              new_black[k].index = new_index;
+              new_black[b].index = new_index;
               break;
             }
           }
@@ -247,91 +230,97 @@ bool AI::run_turn()
           // if there was an opposing piece on new_index, capture it
           for (int del = 0; del < new_white.size(); del++)
           {
-            if (new_white[del].index == current_index)
-              new_white.erase(new_white.begin() + del);
+            if (new_white[del].index == new_index)
+              // new_white.erase(new_white.begin() + del);
+              new_white[del].type = '\0';
           }
         }
 
         else // my color is white
         {
-          int current_index = getIndex(valid_pieces[i].piece_rank, valid_pieces[i].piece_file);
-
-          for (int k = 0; k < new_white.size(); k++)
+          // for each white piece
+          for (int w = 0; w < new_white.size(); w++)
           {
             // found the piece we want to move
-            if (new_white[k].index == current_index)
+            if (new_white[w].index == current_index)
             {
               // if we're moving the king, update its location
-              if (new_white[k].type == "King")
+              if (new_white[w].type == "King")
                 location = new_index;
 
               // move the piece to its new index
-              new_white[k].index = new_index;
+              new_white[w].index = new_index;
               break;
             }
           }
 
+          // if there was an opposing piece on new_index, capture it
           for (int del = 0; del < new_black.size(); del++)
           {
-            if (new_black[del].index == current_index)
-              new_black.erase(new_white.begin() + del);
+            if (new_black[del].index == new_index)
+              // new_black.erase(new_black.begin() + del);
+              new_black[del].type = '\0';
           }
         }
 
         // generate new bitboard
         state.board.readBoard(new_black, new_white);
-        state.piece = valid_pieces[i];
+        attacked = getAttacked(their_color, state.board, attack);
+        // cout << attacked << endl;
 
-        bitset<BOARD_SIZE> new_attacked = getAttacked(their_color, state.board, attack);
         if (!isChecked(attacked, location))
+        {
+          state.current_index = current_index;
+          state.new_index = new_index;
           possible_states.push_back(state);
+        }
+        // else cout << "KING IS CHECKED" << endl;
 
-        num_moves--;
+        num_moves--; // we've accounted for one of the moves
       }
 
-      new_index++;
+      new_index++; // look at next square on board
     }
   }
 
-  int r = rand() % possible_states.size();
-  PieceToMove rand_piece = possible_states[r].piece;
-  int m = rand() % rand_piece.piece_moves.count() + 1;
-  int rand_move = -1;
-
-  while (m != 0)
+  int total = 0;
+  for (int i = 0; i < movable_pieces.size(); i++)
   {
-    rand_move++;
-
-    if (rand_piece.piece_moves[rand_move] == 1)
-      m--;
+    total += movable_pieces[i].piece_moves.count();
   }
 
-  int rand_rank = getRank(rand_move);
-  string rand_file = getFile(rand_move);
+  cout << "pseudo: " << total << ", strict: " << possible_states.size() << endl;
+
+  // pick random state
+  int r = rand() % possible_states.size();
+  string from_file = getFile(possible_states[r].current_index);
+  int from_rank = getRank(possible_states[r].current_index);
+  string to_file = getFile(possible_states[r].new_index);
+  int to_rank = getRank(possible_states[r].new_index);
 
   for (auto piece : player->pieces)
   {
-    if (piece->file == rand_piece.piece_file && piece->rank == rand_piece.piece_rank)
+    if (piece->file == from_file && piece->rank == from_rank)
     {
-      cout << endl << piece->type << " on " << rand_piece.piece_file
-        << piece->rank << " can move to:" << endl;
+      cout << piece->type << " on " << from_file
+        << from_rank << " can move to:" << endl;
 
-      for (int i = 0; i < rand_piece.piece_moves.size(); i++)
-      {
-        if (rand_piece.piece_moves[i] == 1)
-          cout << "\t" << getFile(i) << getRank(i) << endl;
-      }
+      // for (int i = 0; i < rand_piece.piece_moves.size(); i++)
+      // {
+      //   if (rand_piece.piece_moves[i] == 1)
+      //     cout << "\t" << getFile(i) << getRank(i) << endl;
+      // }
 
       // default promote to Queen
-      piece->move(rand_file, rand_rank, "Queen");
+      piece->move(to_file, to_rank, "Queen");
       break;
     }
   }
 
   print_current_board();
-  cout << "Time Remaining: " << player->time_remaining << " ns" << endl;
-  if(game->moves.size() > 0)
-    cout << "Opponent's Last Move: '" << game->moves[game->moves.size() - 1]->san << "'" << endl;
+  // cout << "Time Remaining: " << player->time_remaining << " ns" << endl;
+  // if(game->moves.size() > 1)
+    // cout << "Opponent's Last Move: '" << game->moves[game->moves.size() - 2]->san << "'" << endl;
 
   return true; // to signify we are done with our turn.
 }
