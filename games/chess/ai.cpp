@@ -143,43 +143,43 @@ bool AI::run_turn()
       int right;
 
       // king-side
-      if (!king_moved && !king_rook_moved)
+      if (!king_moved && !king_rook_moved && !isAttacked(attacked, king_location))
       {
         bool can_castle = true;
 
         if (player->color == BLACK)
           right = B_ROOK_2;
         else
-          right = W_ROOK_2;
+          right = king_location + CASTLE;
 
-        for (int i = king_location + LEFT_RIGHT; i < right; i++)
+        for (int i = king_location + LEFT_RIGHT; i <= right; i++)
         {
           if (isAttacked(attacked, i) || board.all_pieces[i] == 1)
             can_castle = false;
         }
 
         if (can_castle)
-          piece_to_move.piece_moves[king_location + CASTLE];
+          {piece_to_move.piece_moves[king_location + CASTLE];cout << "king castle!" << endl;}
       }
 
       // queen-side
-      if (!king_moved && !queen_rook_moved)
+      if (!king_moved && !queen_rook_moved && !isAttacked(attacked, king_location))
       {
         bool can_castle = true;
 
         if (player->color == BLACK)
           left = B_ROOK_1;
         else
-          left = W_ROOK_1;
+          left = king_location - CASTLE;
 
-        for (int i = left + LEFT_RIGHT; i < king_location; i++)
+        for (int i = left; i < king_location; i++)
         {
           if (isAttacked(attacked, i) || board.all_pieces[i] == 1)
             can_castle = false;
         }
 
         if (can_castle)
-          piece_to_move.piece_moves[king_location - CASTLE];
+            {piece_to_move.piece_moves[king_location - CASTLE];cout << "queen castle!" << endl;}
       }
     }
 
@@ -304,6 +304,7 @@ bool AI::run_turn()
         state.board.readBoard(new_black, new_white);
         attacked = getAttacked(player->opponent->color, state.board, attack);
 
+        // if the king isn't checked after this move is completed
         if (!isAttacked(attacked, location))
         {
           state.current_index = current_index;
@@ -345,8 +346,6 @@ bool AI::run_turn()
     else if (possible_states[r].current_index == W_KING)
       king_moved = true;
   }
-
-  //if (possible_states[r].current_index == )
 
   for (auto piece : player->pieces)
   {
