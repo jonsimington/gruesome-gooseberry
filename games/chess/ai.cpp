@@ -30,6 +30,10 @@ void AI::start()
 {
   // This is a good place to initialize any variables
   srand(time(NULL));
+  attack.generateAttacks();
+  king_rook_moved = false;
+  queen_rook_moved = false;
+  king_moved = false;
 }
 
 /// <summary>
@@ -47,7 +51,7 @@ void AI::game_updated()
 /// <param name="reason">An explanation for why you either won or lost</param>
 void AI::ended(bool won, const string& reason)
 {
-    // You can do any cleanup of your AI here.  The program ends when this function returns.
+  // You can do any cleanup of your AI here.  The program ends when this function returns.
 }
 
 /// <summary>
@@ -56,10 +60,18 @@ void AI::ended(bool won, const string& reason)
 /// <returns>Represents if you want to end your turn. True means end your turn, False means to keep your turn going and re-call this function.</returns>
 bool AI::run_turn()
 {
-  cout << endl << "start!" << endl;
-  Chessboard board;
+  print_current_board();
+  // gather pieces from MegaMiner framework
   vector<BasicPiece> black_pieces;
   vector<BasicPiece> white_pieces;
+
+  // current board setup; based on black_pieces and white_pieces
+  Chessboard board;
+  int king_location;
+  bitset<BOARD_SIZE> attacked;
+
+  // generate new moves
+  vector<PieceToMove> movable_pieces;
   vector<NewState> possible_states;
 
   // get board setup
@@ -83,36 +95,19 @@ bool AI::run_turn()
 
   // generate bitboard from piece setup
   board.readBoard(black_pieces, white_pieces);
+  attacked = getAttacked(player->opponent->color, board, attack);
 
-  // generate all available attacks for every piece at any location
-  AttackPiece attack;
-  attack.generateAttacks();
+  cout << player->opponent->color << " -- their attacks:" << endl;
+  printBoard(attacked);
+  cout << player->color << " -- my attacks:" << endl;
+  printBoard(getAttacked(player->color, board, attack));
 
-  int num_moves = 0;
-  int num_pieces = player->pieces.size();
-  vector<PieceToMove> movable_pieces;
-  PieceToMove piece_to_move;
-  string last_move;
-  bool can_en_passant = false;
-  int king_location;
-  string my_color;
-  string their_color;
-  bitset<BOARD_SIZE> attacked = 0;
-
-  // initialize colors
-  if (player->color == "Black")
-  {
-    my_color = BLACK;
-    their_color = WHITE;
-  }
-
-  else
-  {
-    my_color = WHITE;
-    their_color = BLACK;
-  }
+  // cout << "all pieces:" << endl;
+  // printBoard(board.all_pieces);
 
   // check if en passant is possible
+  bool can_en_passant = false;
+  string last_move;
   if (game->moves.size() > 0)
   {
     last_move = game->moves[game->moves.size() - 1]->san;
@@ -124,6 +119,40 @@ bool AI::run_turn()
       if (abs(game->moves[game->moves.size() - 1]->from_rank - last_move[1]) == EN_PASSANT)
         can_en_passant = true;
     }
+  }
+
+  // check if castling possible
+  int left;
+  int right;
+
+  // king-side
+  if (!king_moved && !king_rook_moved)
+  {
+    bool can_castle = true;
+
+    if (player->color == BLACK)
+      left = B_ROOK_1;
+    else
+      left = W_ROOK_1;
+
+    left += LEFT_RIGHT;
+    for (int i = left; i < king_location; i++)
+    {
+      if (isAttacked(attacked, i) || board.all_pieces[i] == 1)
+        can_castle = false;
+    }
+
+    if (can_castle)
+    {
+      // castle
+    }
+  }
+
+  right = left + HEIGHT_WIDTH;
+  if (!king_moved && !queen_rook_moved)
+  {
+
+
   }
 
   // get the current location of the king
@@ -139,42 +168,103 @@ bool AI::run_turn()
   // cout << "Queen at 0 can attack: " << endl;
   // printBoard(attack.attacking_queen[0]);
   //
-  // attacked = getAttacked(their_color, board, attack);
-  // cout << their_color << " attacks: " << endl;
+  // attacked = getAttacked(player->opponent->color, board, attack);
+  // cout << player->opponent->color << " attacks: " << endl;
   // printBoard(attacked);
-  // if (isChecked(attacked, king_location))
+  // if (isAttacked(attacked, king_location))
   //   cout << "KING IS CHECKED -----------" << endl;
   //
-  // cout << my_color << " king is on:" << endl;
-  // if (my_color == BLACK)
+  // cout << player->color << " king is on:" << endl;
+  // if (player->color == BLACK)
   //   printBoard(board.black[KING]);
   // else printBoard(board.white[KING]);
 
   // find all movable pieces and their possible moves (don't worry about check)
   for (auto piece : player->pieces)
   {
+    PieceToMove piece_to_move;
     int i = getIndex(piece->rank, piece->file);
 
-    if (piece->type == "King") // king won't move into check
-      piece_to_move.piece_moves = (board.getKingMoves(my_color, i, attack) & ~attacked);
+    if (piece->type == "King")
+    {
+      piece_to_move.piece_moves = board.getKingMoves(player->color, i, attack);
+
+      // check if castling possible
+      int left;
+      int right;
+
+      // king-side
+      if (!king_moved && !king_rook_moved)
+      {
+        bool can_castle = true;
+
+        if (player->color == BLACK)
+          right = B_ROOK_2;
+        else
+          right = W_ROOK_2;
+
+        for (int i = king_location + LEFT_RIGHT; i < right; i++)
+        {
+          if (isAttacked(attacked, i) || board.all_pieces[i] == 1)
+            can_castle = false;
+        }
+
+        if (can_castle)
+          piece_to_move.piece_moves[king_location + CASTLE];
+      }
+
+      // queen-side
+      if (!king_moved && !queen_rook_moved)
+      {
+        bool can_castle = true;
+
+        if (player->color == BLACK)
+          left = B_ROOK_1;
+        else
+          left = W_ROOK_1;
+
+        for (int i = left + LEFT_RIGHT; i < king_location; i++)
+        {
+          if (isAttacked(attacked, i) || board.all_pieces[i] == 1)
+            can_castle = false;
+        }
+
+        if (can_castle)
+          piece_to_move.piece_moves[king_location - CASTLE];
+      }
+    }
+
     else if (piece->type == "Queen")
-      piece_to_move.piece_moves = board.getQueenMoves(my_color, i, attack);
+      piece_to_move.piece_moves = board.getQueenMoves(player->color, i, attack);
     else if (piece->type == "Rook")
-      piece_to_move.piece_moves = board.getRookMoves(my_color, i, attack);
+      piece_to_move.piece_moves = board.getRookMoves(player->color, i, attack);
     else if (piece->type == "Bishop")
-      piece_to_move.piece_moves = board.getBishopMoves(my_color, i, attack);
+      piece_to_move.piece_moves = board.getBishopMoves(player->color, i, attack);
     else if (piece->type == "Knight")
-      piece_to_move.piece_moves = board.getKnightMoves(my_color, i, attack);
+      piece_to_move.piece_moves = board.getKnightMoves(player->color, i, attack);
     else // pawn
     {
-      piece_to_move.piece_moves = board.getPawnMoves(my_color, i, attack);
+      piece_to_move.piece_moves = board.getPawnMoves(player->color, i, attack);
 
       if (can_en_passant)
       {
-        int index = getIndex(last_move[1] + 1, last_move[0] + "");
+        int index;
 
-        if (attack.attacking_b_pawn[i][index] == 1)
-          piece_to_move.piece_moves[index] = 1;
+        if (player->color == BLACK)
+        {
+          index = getIndex(last_move[1] - 1, last_move[0] + "");
+
+          if (attack.attacking_b_pawn[i][index] == 1)
+            piece_to_move.piece_moves[index] = 1;
+        }
+
+        else // my color is white
+        {
+          index = getIndex(last_move[1] + 1, last_move[0] + "");
+
+          if (attack.attacking_w_pawn[i][index] == 1)
+            piece_to_move.piece_moves[index] = 1;
+        }
       }
     }
 
@@ -209,7 +299,7 @@ bool AI::run_turn()
         vector<BasicPiece> new_black = black_pieces;
         vector<BasicPiece> new_white = white_pieces;
 
-        if (my_color == BLACK)
+        if (player->color == BLACK)
         {
           // for each black piece
           for (int b = 0; b < new_black.size(); b++)
@@ -265,10 +355,10 @@ bool AI::run_turn()
 
         // generate new bitboard
         state.board.readBoard(new_black, new_white);
-        attacked = getAttacked(their_color, state.board, attack);
+        attacked = getAttacked(player->opponent->color, state.board, attack);
         // cout << attacked << endl;
 
-        if (!isChecked(attacked, location))
+        if (!isAttacked(attacked, location))
         {
           state.current_index = current_index;
           state.new_index = new_index;
@@ -289,7 +379,7 @@ bool AI::run_turn()
     total += movable_pieces[i].piece_moves.count();
   }
 
-  cout << "pseudo: " << total << ", strict: " << possible_states.size() << endl;
+  // cout << "pseudo: " << total << ", strict: " << possible_states.size() << endl;
 
   // pick random state
   int r = rand() % possible_states.size();
@@ -297,6 +387,29 @@ bool AI::run_turn()
   int from_rank = getRank(possible_states[r].current_index);
   string to_file = getFile(possible_states[r].new_index);
   int to_rank = getRank(possible_states[r].new_index);
+
+  // update castling
+  if (player->color == BLACK)
+  {
+    if (possible_states[r].current_index == B_ROOK_1)
+      queen_rook_moved = true;
+    else if (possible_states[r].current_index == B_ROOK_2)
+      king_rook_moved = true;
+    else if (possible_states[r].current_index == B_KING)
+      king_moved = true;
+  }
+
+  else // my color is white
+  {
+    if (possible_states[r].current_index == W_ROOK_1)
+      queen_rook_moved = true;
+    else if (possible_states[r].current_index == W_ROOK_2)
+      king_rook_moved = true;
+    else if (possible_states[r].current_index == W_KING)
+      king_moved = true;
+  }
+
+  //if (possible_states[r].current_index == )
 
   for (auto piece : player->pieces)
   {
@@ -317,7 +430,7 @@ bool AI::run_turn()
     }
   }
 
-  print_current_board();
+  // print_current_board();
   // cout << "Time Remaining: " << player->time_remaining << " ns" << endl;
   // if(game->moves.size() > 1)
     // cout << "Opponent's Last Move: '" << game->moves[game->moves.size() - 2]->san << "'" << endl;

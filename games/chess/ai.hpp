@@ -40,6 +40,10 @@ public:
     Player player;
 
     // You can add additional class variables here.
+    AttackPiece attack;
+    bool king_rook_moved;
+    bool queen_rook_moved;
+    bool king_moved;
 
     /// <summary>
     /// This returns your AI's name to the game server.

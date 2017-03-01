@@ -61,10 +61,9 @@ public:
 struct NewState
 {
   Chessboard board;
-  // PieceToMove piece;
   int current_index;
   int new_index;
 };
 
 bitset<BOARD_SIZE> getAttacked(const string their_color, Chessboard& board, const AttackPiece& attack);
-bool isChecked(const bitset<BOARD_SIZE>& attacked, const int location);
+bool isAttacked(const bitset<BOARD_SIZE>& attacked, const int location);
