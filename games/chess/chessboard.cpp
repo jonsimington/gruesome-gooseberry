@@ -7,11 +7,13 @@
 #include "chessboard.h"
 using namespace std;
 
+// returns the rank of a specific index
 int getRank(const int i)
 {
   return i / HEIGHT_WIDTH + 1;
 }
 
+// returns the file of a specific index
 string getFile(const int i)
 {
   string file;
@@ -47,6 +49,7 @@ string getFile(const int i)
   return file;
 }
 
+// returns the index of a specific rank and file
 int getIndex(const int rank, const string file)
 {
   int index = (rank - 1) * HEIGHT_WIDTH;
@@ -81,6 +84,7 @@ int getIndex(const int rank, const string file)
   return index;
 }
 
+// identifies all squares attacked by enemy player in current board setup
 bitset<BOARD_SIZE> getAttacked(const string their_color, Chessboard& board, const AttackPiece& attack)
 {
   bitset<BOARD_SIZE> attacked = 0;
@@ -124,6 +128,7 @@ bitset<BOARD_SIZE> getAttacked(const string their_color, Chessboard& board, cons
   return attacked;
 }
 
+// prints any bitboard in a nice format
 void printBoard(const bitset<BOARD_SIZE>& board)
 {
   int min = 56;
@@ -149,6 +154,7 @@ void printBoard(const bitset<BOARD_SIZE>& board)
   return;
 }
 
+// checks whether a given square is attacked by the enemy
 bool isAttacked(const bitset<BOARD_SIZE>& attacked, const int location)
 {
   if (attacked[location] == 1)
@@ -188,12 +194,6 @@ Chessboard::Chessboard(const Chessboard& b)
 // places black and white pieces according to current board state
 void Chessboard::readBoard(vector<BasicPiece> blk_pieces, vector<BasicPiece> wht_pieces)
 {
-  // black[PAWNS][63] = 1;
-  // black[PAWNS][7] = 1;
-  // black[PAWNS][27] = 1;
-  // white[KING][32] = 1;
-  // black[QUEEN][47] = 1;
-  // white[KING][55] = 1;
   for (int i = 0; i < blk_pieces.size(); i++)
   {
     if (blk_pieces[i].type == "King")
@@ -249,6 +249,7 @@ bitset<BOARD_SIZE> Chessboard::getKingMoves(const string c, const int i, const A
   return a.attacking_king[i] & ~my_side;
 }
 
+// returns all valid queen moves given the current location of all pieces
 bitset<BOARD_SIZE> Chessboard::getQueenMoves(const string c, const int i, const AttackPiece& a)
 {
   bitset<BOARD_SIZE> my_side;
@@ -433,6 +434,7 @@ bitset<BOARD_SIZE> Chessboard::getQueenMoves(const string c, const int i, const 
   return valid_moves;
 }
 
+// returns all valid rook moves given the current location of all pieces
 bitset<BOARD_SIZE> Chessboard::getRookMoves(const string c, const int i, const AttackPiece& a)
 {
   bitset<BOARD_SIZE> my_side;
@@ -533,6 +535,7 @@ bitset<BOARD_SIZE> Chessboard::getRookMoves(const string c, const int i, const A
   return valid_moves;
 }
 
+// returns all valid bishop moves given the current location of all pieces
 bitset<BOARD_SIZE> Chessboard::getBishopMoves(const string c, const int i, const AttackPiece& a)
 {
   bitset<BOARD_SIZE> pieces = all_pieces;
@@ -643,7 +646,7 @@ bitset<BOARD_SIZE> Chessboard::getKnightMoves(const string c, const int i, const
     return a.attacking_knight[i] & ~w_pieces;
 }
 
-// returns all valid pawn moves given the current location of all pieces
+// returns all valid pawn moves (no attacks) given the current location of all pieces
 bitset<BOARD_SIZE> Chessboard::getPawnMoves(const string c, const int i, const AttackPiece& a)
 {
   bitset<BOARD_SIZE> valid_moves;

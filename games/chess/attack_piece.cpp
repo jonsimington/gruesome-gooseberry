@@ -131,7 +131,7 @@ void AttackPiece::queenAttacks()
     // for everthing in its column
     for (int up = i; up < BOARD_SIZE; up += HEIGHT_WIDTH)
       attacking_queen[i][up] = 1;
-    for (int down = i; down > 0; down -= HEIGHT_WIDTH)
+    for (int down = i; down >= 0; down -= HEIGHT_WIDTH)
       attacking_queen[i][down] = 1;
 
     int left = i;
@@ -163,7 +163,7 @@ void AttackPiece::rookAttacks()
     // for everthing in its column
     for (int up = i; up < BOARD_SIZE; up += HEIGHT_WIDTH)
       attacking_rook[i][up] = 1;
-    for (int down = i; down > 0; down -= HEIGHT_WIDTH)
+    for (int down = i; down >= 0; down -= HEIGHT_WIDTH)
       attacking_rook[i][down] = 1;
 
     int left = i;

@@ -40,10 +40,10 @@ public:
     Player player;
 
     // You can add additional class variables here.
-    AttackPiece attack;
-    bool king_rook_moved;
-    bool queen_rook_moved;
-    bool king_moved;
+    AttackPiece attack; // every possible move for any piece on any square
+    bool king_rook_moved; // whether or not my player's king-side rook moved
+    bool queen_rook_moved; // whether or not my player's queen-side rook moved
+    bool king_moved; // whether or not my player's king moved
 
     /// <summary>
     /// This returns your AI's name to the game server.

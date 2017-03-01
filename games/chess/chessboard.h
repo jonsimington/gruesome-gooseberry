@@ -14,11 +14,7 @@
 #include <vector>
 using namespace std;
 
-int getIndex(const int rank, const string file);
-int getRank(const int i);
-string getFile(const int i);
-void printBoard(const bitset<BOARD_SIZE>& board);
-
+// information about each movable piece, including all locations it can move to
 struct PieceToMove
 {
   bitset<BOARD_SIZE> piece_moves;
@@ -27,6 +23,7 @@ struct PieceToMove
   string piece_type;
 };
 
+// location and type of each piece; used for initializing board
 struct BasicPiece
 {
   int index;
@@ -58,6 +55,7 @@ public:
   bool gameOver();
 };
 
+// holds the board setup after a piece moves from current_index to new_index
 struct NewState
 {
   Chessboard board;
@@ -65,5 +63,10 @@ struct NewState
   int new_index;
 };
 
+// additional, non-class-specific functions
+int getIndex(const int rank, const string file);
+int getRank(const int i);
+string getFile(const int i);
+void printBoard(const bitset<BOARD_SIZE>& board);
 bitset<BOARD_SIZE> getAttacked(const string their_color, Chessboard& board, const AttackPiece& attack);
 bool isAttacked(const bitset<BOARD_SIZE>& attacked, const int location);

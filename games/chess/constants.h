@@ -22,6 +22,11 @@ const int LEFT_RIGHT = 1; // moving left/right
 const int NW_SE_DIAGONAL = 7; // moving along \ line
 const int NE_SW_DIAGONAL = 9; // moving along / line
 const int PAWN_START = 2; // pawn can move twice at the start
+
+// special move conditions
+const int PROMOTE_TYPES = 4; // pawn can promote to one of four types
+const int PAWN_NOTATION = 2; // 2 characters in SAN for pawn movements
+const int EN_PASSANT = 2; // can only EP if pawn moved 2 squares
 const int CASTLE = 2; // distance king moves on a castle
 
 // determines knight movements based on index
@@ -37,19 +42,16 @@ const int BISHOPS = 3;
 const int KNIGHTS = 4;
 const int PAWNS = 5;
 
-// starting indices of each black piece (pawns have a range)
+// starting locations of key black pieces (pawns have a range)
 const int B_KING = 60;
 const int B_ROOK_1 = 56;
 const int B_ROOK_2 = 63;
 const int B_PAWN_LEFT = 48;
 const int B_PAWN_RIGHT = 55;
 
-// starting indices of each white piece (pawns have a range)
+// starting locations of key white pieces (pawns have a range)
 const int W_KING = 4;
 const int W_ROOK_1 = 0;
 const int W_ROOK_2 = 7;
 const int W_PAWN_LEFT = 8;
 const int W_PAWN_RIGHT = 15;
-
-const int PAWN_NOTATION = 2; // 2 characters in SAN for pawn movements
-const int EN_PASSANT = 2; // can only EP if pawn moved 2 squares
