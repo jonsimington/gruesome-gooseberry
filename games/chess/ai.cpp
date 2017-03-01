@@ -60,7 +60,9 @@ void AI::ended(bool won, const string& reason)
 /// <returns>Represents if you want to end your turn. True means end your turn, False means to keep your turn going and re-call this function.</returns>
 bool AI::run_turn()
 {
+  cout << endl << "Start turn! Here's the current board:" << endl;
   print_current_board();
+
   // gather pieces from MegaMiner framework
   vector<BasicPiece> black_pieces;
   vector<BasicPiece> white_pieces;
@@ -97,10 +99,10 @@ bool AI::run_turn()
   board.readBoard(black_pieces, white_pieces);
   attacked = getAttacked(player->opponent->color, board, attack);
 
-  cout << player->opponent->color << " -- their attacks:" << endl;
-  printBoard(attacked);
-  cout << player->color << " -- my attacks:" << endl;
-  printBoard(getAttacked(player->color, board, attack));
+  // cout << player->opponent->color << " -- their attacks:" << endl;
+  // printBoard(attacked);
+  // cout << player->color << " -- my attacks:" << endl;
+  // printBoard(getAttacked(player->color, board, attack));
 
   // check if en passant is possible
   bool can_en_passant = false;
@@ -312,6 +314,9 @@ bool AI::run_turn()
           possible_states.push_back(state);
         }
 
+        else // piece can't move here
+          movable_pieces[i].piece_moves[new_index] == 0;
+
         num_moves--; // we've accounted for one of the moves
       }
 
@@ -320,30 +325,44 @@ bool AI::run_turn()
   }
 
   // pick random state
-  int r = rand() % possible_states.size();
-  string from_file = getFile(possible_states[r].current_index);
-  int from_rank = getRank(possible_states[r].current_index);
-  string to_file = getFile(possible_states[r].new_index);
-  int to_rank = getRank(possible_states[r].new_index);
+  int rand_state = rand() % possible_states.size();
+  PieceToMove rand_piece;
+
+  string from_file = getFile(possible_states[rand_state].current_index);
+  int from_rank = getRank(possible_states[rand_state].current_index);
+  string to_file = getFile(possible_states[rand_state].new_index);
+  int to_rank = getRank(possible_states[rand_state].new_index);
+
+  // get all possible moves
+  for (int i = 0; i < movable_pieces.size(); i++)
+  {
+    int index = getIndex(movable_pieces[i].piece_rank, movable_pieces[i].piece_file);
+
+    if (index == possible_states[rand_state].current_index)
+    {
+      rand_piece = movable_pieces[i];
+      break;
+    }
+  }
 
   // update castling
   if (player->color == BLACK)
   {
-    if (possible_states[r].current_index == B_ROOK_1)
+    if (possible_states[rand_state].current_index == B_ROOK_1)
       queen_rook_moved = true;
-    else if (possible_states[r].current_index == B_ROOK_2)
+    else if (possible_states[rand_state].current_index == B_ROOK_2)
       king_rook_moved = true;
-    else if (possible_states[r].current_index == B_KING)
+    else if (possible_states[rand_state].current_index == B_KING)
       king_moved = true;
   }
 
   else // my color is white
   {
-    if (possible_states[r].current_index == W_ROOK_1)
+    if (possible_states[rand_state].current_index == W_ROOK_1)
       queen_rook_moved = true;
-    else if (possible_states[r].current_index == W_ROOK_2)
+    else if (possible_states[rand_state].current_index == W_ROOK_2)
       king_rook_moved = true;
-    else if (possible_states[r].current_index == W_KING)
+    else if (possible_states[rand_state].current_index == W_KING)
       king_moved = true;
   }
 
@@ -354,14 +373,15 @@ bool AI::run_turn()
       cout << piece->type << " on " << from_file
         << from_rank << " can move to:" << endl;
 
-      // for (int i = 0; i < rand_piece.piece_moves.size(); i++)
-      // {
-      //   if (rand_piece.piece_moves[i] == 1)
-      //     cout << "\t" << getFile(i) << getRank(i) << endl;
-      // }
+      for (int i = 0; i < rand_piece.piece_moves.size(); i++)
+      {
+        if (rand_piece.piece_moves[i] == 1)
+          cout << "\t" << getFile(i) << getRank(i) << endl;
+      }
 
       // promote to random type
       int random_type = rand() % PROMOTE_TYPES;
+
       if (random_type == 0)
         piece->move(to_file, to_rank, "Queen");
       else if (random_type == 1)
@@ -374,10 +394,9 @@ bool AI::run_turn()
     }
   }
 
-  // print_current_board();
-  // cout << "Time Remaining: " << player->time_remaining << " ns" << endl;
-  // if(game->moves.size() > 1)
-    // cout << "Opponent's Last Move: '" << game->moves[game->moves.size() - 2]->san << "'" << endl;
+  cout << "Time Remaining: " << player->time_remaining << " ns" << endl;
+  if(game->moves.size() > 1)
+    cout << "Opponent's Last Move: '" << game->moves[game->moves.size() - 2]->san << "'" << endl;
 
   return true; // to signify we are done with our turn.
 }
