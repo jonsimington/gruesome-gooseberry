@@ -14,20 +14,18 @@
 #include <vector>
 using namespace std;
 
-// information about each movable piece, including all locations it can move to
-struct PieceToMove
-{
-  bitset<BOARD_SIZE> piece_moves;
-  int piece_rank;
-  string piece_file;
-  string piece_type;
-};
-
 // location and type of each piece; used for initializing board
 struct BasicPiece
 {
   int index;
   string type;
+};
+
+struct CastleCheck
+{
+  bool king_moved;
+  bool king_rook_moved;
+  bool queen_rook_moved;
 };
 
 // this class holds the locations of all pieces
@@ -53,6 +51,15 @@ public:
   bitset<BOARD_SIZE> getPawnMoves(const string c, const int i, const AttackPiece& a);
   bitset<BOARD_SIZE> getPawnAttacks(const string c, const int i, const AttackPiece& a);
   bool gameOver();
+};
+
+// information about each movable piece, including all locations it can move to
+struct PieceToMove
+{
+  bitset<BOARD_SIZE> piece_moves;
+  int piece_rank;
+  string piece_file;
+  string piece_type;
 };
 
 // holds the board setup after a piece moves from current_index to new_index

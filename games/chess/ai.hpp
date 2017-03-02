@@ -41,9 +41,7 @@ public:
 
     // You can add additional class variables here.
     AttackPiece attack; // every possible move for any piece on any square
-    bool king_rook_moved; // whether or not my player's king-side rook moved
-    bool queen_rook_moved; // whether or not my player's queen-side rook moved
-    bool king_moved; // whether or not my player's king moved
+    CastleCheck castle; // whether or not castling is possible
 
     /// <summary>
     /// This returns your AI's name to the game server.
@@ -83,7 +81,20 @@ public:
     /// </remarks>
     void print_current_board();
 
-    // You can add additional methods here.
+    // my functions
+    bool checkEnPassant(string& last_move);
+    int getKingLocation();
+    void findPieces(vector<BasicPiece>& black_pieces, vector<BasicPiece>& white_pieces);
+    void findMovablePieces(vector<PieceToMove>& movable_pieces,
+      Chessboard& board, const bitset<BOARD_SIZE>& attacked, const int king_location,
+      const string last_move, const bool can_en_passant);
+    void findMoves(const int king_location,
+      const vector<BasicPiece>& black, const vector<BasicPiece>& white,
+      vector<PieceToMove>& moves, vector<NewState>& states);
+    PieceToMove getRandomPiece(const int random,
+      const vector<PieceToMove>& moves, const vector<NewState>& states);
+    void updateCastlingAbility(const NewState& state);
+    void makeMove(const int old_index, const int new_index, bitset<BOARD_SIZE> moves);
 
     // ####################
     // Don't edit these!

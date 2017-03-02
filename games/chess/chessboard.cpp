@@ -89,11 +89,12 @@ bitset<BOARD_SIZE> getAttacked(const string their_color, Chessboard& board, cons
 {
   bitset<BOARD_SIZE> attacked = 0;
 
-  // cout << board.all_pieces << endl;
+  // for every square on the board
   for (int i = 0; i < BOARD_SIZE; i++)
   {
     if (their_color == BLACK)
     {
+      // generate squares attacked by the piece on square i
       if (board.black[KING][i] == 1)
         attacked |= board.getKingMoves(their_color, i, attack);
       else if (board.black[QUEEN][i] == 1)
@@ -110,6 +111,7 @@ bitset<BOARD_SIZE> getAttacked(const string their_color, Chessboard& board, cons
 
     else // they are white
     {
+      // generate squares attacked by the piece on square i
       if (board.white[KING][i] == 1)
         attacked |= board.getKingMoves(their_color, i, attack);
       else if (board.white[QUEEN][i] == 1)
@@ -131,12 +133,17 @@ bitset<BOARD_SIZE> getAttacked(const string their_color, Chessboard& board, cons
 // prints any bitboard in a nice format
 void printBoard(const bitset<BOARD_SIZE>& board)
 {
-  int min = 56;
-  int max = 64;
+  // top two corners of the board
+  int min = B_ROOK_1;
+  int max = B_ROOK_2;
 
+  // prints row by row from top to bottom
   while (min >= 0)
   {
-    cout << max / 8 << " |";
+    // rank
+    cout << max / HEIGHT_WIDTH << " |";
+
+    // bit at square i
     for (int i = min; i < max; i++)
     {
       cout << board[i] << " ";
@@ -144,9 +151,12 @@ void printBoard(const bitset<BOARD_SIZE>& board)
 
     cout << endl;
 
-    min -= 8;
-    max -=8;
+    // go down a row
+    min -= HEIGHT_WIDTH;
+    max -= HEIGHT_WIDTH;
   }
+
+  // output file labels
   cout << "   ---------------" << endl;
   cout << "   a b c d e f g h" << endl;
 
@@ -194,6 +204,7 @@ Chessboard::Chessboard(const Chessboard& b)
 // places black and white pieces according to current board state
 void Chessboard::readBoard(vector<BasicPiece> blk_pieces, vector<BasicPiece> wht_pieces)
 {
+  // for all black pieces
   for (int i = 0; i < blk_pieces.size(); i++)
   {
     if (blk_pieces[i].type == "King")
@@ -210,6 +221,7 @@ void Chessboard::readBoard(vector<BasicPiece> blk_pieces, vector<BasicPiece> wht
       black[PAWNS][blk_pieces[i].index] = 1;
   }
 
+  // for all white pieces
   for (int i = 0; i < wht_pieces.size(); i++)
   {
     if (wht_pieces[i].type == "King")
@@ -239,14 +251,10 @@ void Chessboard::readBoard(vector<BasicPiece> blk_pieces, vector<BasicPiece> wht
 // returns all valid king moves given the current location of all pieces
 bitset<BOARD_SIZE> Chessboard::getKingMoves(const string c, const int i, const AttackPiece& a)
 {
-  bitset<BOARD_SIZE> my_side;
-
   if (c == BLACK) // black
-    my_side = b_pieces;
+    return a.attacking_king[i] & ~b_pieces;
   else // white
-    my_side = w_pieces;
-
-  return a.attacking_king[i] & ~my_side;
+    return a.attacking_king[i] & ~w_pieces;
 }
 
 // returns all valid queen moves given the current location of all pieces
@@ -254,7 +262,7 @@ bitset<BOARD_SIZE> Chessboard::getQueenMoves(const string c, const int i, const 
 {
   bitset<BOARD_SIZE> my_side;
   bitset<BOARD_SIZE> valid_moves;
-  int slider;
+  int slider; // moves along the entire straight line the piece can move
 
   if (c == BLACK) // black
     my_side = b_pieces;
@@ -439,7 +447,7 @@ bitset<BOARD_SIZE> Chessboard::getRookMoves(const string c, const int i, const A
 {
   bitset<BOARD_SIZE> my_side;
   bitset<BOARD_SIZE> valid_moves;
-  int slider;
+  int slider; // moves along the entire straight line the piece can move
 
   if (c == BLACK) // black
     my_side = b_pieces;
@@ -541,7 +549,7 @@ bitset<BOARD_SIZE> Chessboard::getBishopMoves(const string c, const int i, const
   bitset<BOARD_SIZE> pieces = all_pieces;
   bitset<BOARD_SIZE> my_side;
   bitset<BOARD_SIZE> valid_moves;
-  int slider;
+  int slider; // moves along the entire straight line the piece can move
 
   if (c == BLACK) // black
     my_side = b_pieces;
