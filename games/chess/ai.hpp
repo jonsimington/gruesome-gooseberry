@@ -82,6 +82,7 @@ public:
     void print_current_board();
 
     // my functions
+    void initializeCastling();
     bool checkEnPassant(string& last_move);
     int getKingLocation();
     void findPieces(vector<BasicPiece>& black_pieces, vector<BasicPiece>& white_pieces);

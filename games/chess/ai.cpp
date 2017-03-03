@@ -32,38 +32,90 @@ void AI::start()
   srand(time(NULL));
   attack.generateAttacks();
 
-  // initialize castling ability
-  for (auto piece : player->pieces)
-  {
-    // whether king moved
-    if (piece->type == "King")
-    {
-      if (piece->has_moved)
-        castle.king_moved = true;
-    }
+  // assume they've moved
+  castle.king_moved = true;
+  castle.king_rook_moved = true;
+  castle.queen_rook_moved = true;
 
-    // whether queen-side or king-side rooks have moved
-    if (piece->type == "Rook")
-    {
-      int index = getIndex(piece->rank, piece->file);
+  // actually check castling
+  initializeCastling();
 
-      // queen-side
-      if (player->color == BLACK && index == B_ROOK_LEFT && !piece->has_moved)
-        castle.queen_rook_moved = false;
-      else if (player->color == WHITE && index == W_ROOK_LEFT && !piece->has_moved)
-        castle.queen_rook_moved = false;
-      else
-        castle.queen_rook_moved = true;
+  // int whitespace = 0;
+  // int i = game->fen.size() - 1;
+  // while (whitespace < CASTLE_WHITESPACE)
+  // {
+  //   if (game->fen[i] == ' ')
+  //     whitespace++;
+  //
+  //   i--;
+  // }
+  //
+  // // now we're looking at castling capability
+  // for (int c = i; c > i - CASTLE_FEN; c--)
+  // {
+  //   if (player->color == BLACK)
+  //   {
+  //     if (game->fen[c] == 'q')
+  //     {
+  //       castle.queen_rook_moved = false;
+  //       castle.king_moved = false;
+  //     }
+  //
+  //     if (game->fen[c] == 'k')
+  //     {
+  //       castle.king_rook_moved = false;
+  //       castle.king_moved = false;
+  //     }
+  //   }
+  //
+  //   else // my player is white
+  //   {
+  //     if (game->fen[c] == 'Q')
+  //     {
+  //       castle.queen_rook_moved = false;
+  //       castle.king_moved = false;
+  //     }
+  //
+  //     if (game->fen[c] == 'K')
+  //     {
+  //       castle.king_rook_moved = false;
+  //       castle.king_moved = false;
+  //     }
+  //   }
+  // }
 
-      // king-side
-      if (player->color == BLACK && index == B_ROOK_RIGHT && !piece->has_moved)
-        castle.king_rook_moved = false;
-      else if (player->color == WHITE && index == W_ROOK_RIGHT && !piece->has_moved)
-        castle.king_rook_moved = false;
-      else
-        castle.king_rook_moved = true;
-    }
-  }
+  // // initialize castling ability
+  // for (auto piece : player->pieces)
+  // {
+  //   // whether king moved
+  //   if (piece->type == "King")
+  //   {
+  //     if (piece->has_moved)
+  //       castle.king_moved = true;
+  //   }
+  //
+  //   // whether queen-side or king-side rooks have moved
+  //   if (piece->type == "Rook")
+  //   {
+  //     int index = getIndex(piece->rank, piece->file);
+  //
+  //     // queen-side
+  //     if (player->color == BLACK && index == B_ROOK_LEFT && !piece->has_moved)
+  //       castle.queen_rook_moved = false;
+  //     else if (player->color == WHITE && index == W_ROOK_LEFT && !piece->has_moved)
+  //       castle.queen_rook_moved = false;
+  //     else
+  //       castle.queen_rook_moved = true;
+  //
+  //     // king-side
+  //     if (player->color == BLACK && index == B_ROOK_RIGHT && !piece->has_moved)
+  //       castle.king_rook_moved = false;
+  //     else if (player->color == WHITE && index == W_ROOK_RIGHT && !piece->has_moved)
+  //       castle.king_rook_moved = false;
+  //     else
+  //       castle.king_rook_moved = true;
+  //   }
+  // }
 }
 
 /// <summary>
@@ -208,6 +260,56 @@ void AI::print_current_board()
 
     cout << str << endl;
   }
+}
+
+// this will initialize castling ability based on game's starting FEN
+void AI::initializeCastling()
+{
+  int whitespace = 0;
+  int i = game->fen.size() - 1;
+  while (whitespace < CASTLE_WHITESPACE)
+  {
+    if (game->fen[i] == ' ')
+      whitespace++;
+
+    i--;
+  }
+
+  // now we're looking at castling capability
+  for (int c = i; c > i - CASTLE_FEN; c--)
+  {
+    if (player->color == BLACK)
+    {
+      if (game->fen[c] == 'q')
+      {
+        castle.queen_rook_moved = false;
+        castle.king_moved = false;
+      }
+
+      if (game->fen[c] == 'k')
+      {
+        castle.king_rook_moved = false;
+        castle.king_moved = false;
+      }
+    }
+
+    else // my player is white
+    {
+      if (game->fen[c] == 'Q')
+      {
+        castle.queen_rook_moved = false;
+        castle.king_moved = false;
+      }
+
+      if (game->fen[c] == 'K')
+      {
+        castle.king_rook_moved = false;
+        castle.king_moved = false;
+      }
+    }
+  }
+
+  return;
 }
 
 // this returns true if en passant is possible; returns false otherwise

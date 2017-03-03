@@ -30,6 +30,9 @@ const int EN_PASSANT = 2; // can only EP if pawn moved 2 squares
 const int EN_PASSANT_FEN = 5; // 5th character from end of FEN indicates en passant
 const int CASTLE = 2; // distance king moves on a castle
 const int CASTLE_WHITESPACE = 3; // castling capability is 3 whitespaces from end of FEN
+const int CASTLE_FEN = 4; // 4 possible characters to signify castling in FEN
+                          // even if castling is '-', other three characters in
+                          // FEN are whitespace or color (i.e. won't match any of KQkq)
 
 // determines knight movements based on index
 // e.g. moving 2 up and 1 left is a difference of 17
