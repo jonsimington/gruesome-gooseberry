@@ -134,8 +134,8 @@ bitset<BOARD_SIZE> getAttacked(const string their_color, Chessboard& board, cons
 void printBoard(const bitset<BOARD_SIZE>& board)
 {
   // top two corners of the board
-  int min = B_ROOK_1;
-  int max = B_ROOK_2;
+  int min = B_ROOK_LEFT;
+  int max = B_ROOK_RIGHT;
 
   // prints row by row from top to bottom
   while (min >= 0)

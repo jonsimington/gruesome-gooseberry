@@ -27,7 +27,9 @@ const int PAWN_START = 2; // pawn can move twice at the start
 const int PROMOTE_TYPES = 4; // pawn can promote to one of four types
 const int PAWN_NOTATION = 2; // 2 characters in SAN for pawn movements
 const int EN_PASSANT = 2; // can only EP if pawn moved 2 squares
+const int EN_PASSANT_FEN = 5; // 5th character from end of FEN indicates en passant
 const int CASTLE = 2; // distance king moves on a castle
+const int CASTLE_WHITESPACE = 3; // castling capability is 3 whitespaces from end of FEN
 
 // determines knight movements based on index
 // e.g. moving 2 up and 1 left is a difference of 17
@@ -44,14 +46,14 @@ const int PAWNS = 5;
 
 // starting locations of key black pieces (pawns have a range)
 const int B_KING = 60;
-const int B_ROOK_1 = 56;
-const int B_ROOK_2 = 63;
+const int B_ROOK_LEFT = 56;
+const int B_ROOK_RIGHT = 63;
 const int B_PAWN_LEFT = 48;
 const int B_PAWN_RIGHT = 55;
 
 // starting locations of key white pieces (pawns have a range)
 const int W_KING = 4;
-const int W_ROOK_1 = 0;
-const int W_ROOK_2 = 7;
+const int W_ROOK_LEFT = 0;
+const int W_ROOK_RIGHT = 7;
 const int W_PAWN_LEFT = 8;
 const int W_PAWN_RIGHT = 15;

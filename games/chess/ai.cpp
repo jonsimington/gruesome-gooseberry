@@ -31,9 +31,46 @@ void AI::start()
   // This is a good place to initialize any variables
   srand(time(NULL));
   attack.generateAttacks();
-  castle.king_rook_moved = false;
-  castle.queen_rook_moved = false;
-  castle.king_moved = false;
+  castle.king_moved = false; // default
+
+  // check castling ability
+  int i = game->fen.size() - 1;
+  int whitespace = 0;
+
+  // skip last three elements of FEN (move counts and en passant)
+  while (whitespace < CASTLE_WHITESPACE)
+  {
+    if (game->fen[i] == ' ')
+      whitespace++;
+    i--;
+  }
+
+  // i is the last character of the castling capability
+  if (player->color == BLACK)
+  {
+    if (game->fen[i] == 'q')
+      castle.queen_rook_moved = false;
+    else
+      castle.queen_rook_moved = true;
+
+    if (game->fen[i - 1] == 'k')
+      castle.king_rook_moved = false;
+    else
+      castle.king_rook_moved = true;
+  }
+
+  else // my color is white
+  {
+    if (game->fen[i - 2] == 'Q')
+      castle.queen_rook_moved = false;
+    else
+      castle.queen_rook_moved = true;
+
+    if (game->fen[i - 3] == 'K')
+      castle.king_rook_moved = false;
+    else
+      castle.king_rook_moved = true;
+  }
 }
 
 /// <summary>
@@ -61,8 +98,8 @@ void AI::ended(bool won, const string& reason)
 bool AI::run_turn()
 {
   cout << endl << "Start " << player->color << "'s turn! Here's the current board:" << endl;
-  cout << game->fen << endl;
   print_current_board();
+  cout << endl;
 
   // gather pieces from MegaMiner framework
   vector<BasicPiece> black_pieces;
@@ -84,6 +121,13 @@ bool AI::run_turn()
 
   // get the current location of the king
   int king_location = getKingLocation();
+
+  // check whether king has moved
+  if (player->color == BLACK && king_location != B_KING)
+    castle.king_moved = true;
+
+  if (player->color == WHITE && king_location != W_KING)
+    castle.king_moved = true;
 
   // find all movable pieces and their possible moves (don't worry about check)
   findMovablePieces(movable_pieces, board, attacked, king_location, last_move, can_en_passant);
@@ -191,6 +235,12 @@ bool AI::checkEnPassant(string& last_move)
     }
   }
 
+  else // opponent hasn't moved yet
+  {
+    if (game->fen[game->fen.size() - EN_PASSANT_FEN] != '-')
+      can_en_passant = true;
+  }
+
   return can_en_passant;
 }
 
@@ -202,7 +252,6 @@ int AI::getKingLocation()
     if (piece->type == "King")
     {
       return getIndex(piece->rank, piece->file);
-      break;
     }
   }
 }
@@ -256,7 +305,7 @@ void AI::findMovablePieces(vector<PieceToMove>& movable_pieces,
         bool can_castle = true;
 
         if (player->color == BLACK)
-          right = B_ROOK_2;
+          right = B_ROOK_RIGHT;
         else
           right = king_location + CASTLE;
 
@@ -278,11 +327,11 @@ void AI::findMovablePieces(vector<PieceToMove>& movable_pieces,
         bool can_castle = true;
 
         if (player->color == BLACK)
-          left = B_ROOK_1;
+          left = B_ROOK_LEFT + LEFT_RIGHT;
         else
           left = king_location - CASTLE;
 
-          // if squares between king and rook are attacked or blocked
+        // if squares between king and rook are attacked or blocked
         for (int i = left; i < king_location; i++)
         {
           if (isAttacked(attacked, i) || board.all_pieces[i] == 1)
@@ -290,7 +339,7 @@ void AI::findMovablePieces(vector<PieceToMove>& movable_pieces,
         }
 
         if (can_castle)
-          piece_to_move.piece_moves[king_location - CASTLE];
+          ;piece_to_move.piece_moves[king_location - CASTLE];
       }
     }
     else if (piece->type == "Queen")
@@ -471,9 +520,9 @@ void AI::updateCastlingAbility(const NewState& state)
 {
   if (player->color == BLACK)
   {
-    if (state.current_index == B_ROOK_1)
+    if (state.current_index == B_ROOK_LEFT)
       castle.queen_rook_moved = true;
-    else if (state.current_index == B_ROOK_2)
+    else if (state.current_index == B_ROOK_RIGHT)
       castle.king_rook_moved = true;
     else if (state.current_index == B_KING)
       castle.king_moved = true;
@@ -481,9 +530,9 @@ void AI::updateCastlingAbility(const NewState& state)
 
   else // my color is white
   {
-    if (state.current_index == W_ROOK_1)
+    if (state.current_index == W_ROOK_LEFT)
       castle.queen_rook_moved = true;
-    else if (state.current_index == W_ROOK_2)
+    else if (state.current_index == W_ROOK_RIGHT)
       castle.king_rook_moved = true;
     else if (state.current_index == W_KING)
       castle.king_moved = true;
