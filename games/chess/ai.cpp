@@ -31,45 +31,38 @@ void AI::start()
   // This is a good place to initialize any variables
   srand(time(NULL));
   attack.generateAttacks();
-  castle.king_moved = false; // default
 
-  // check castling ability
-  int i = game->fen.size() - 1;
-  int whitespace = 0;
-
-  // skip last three elements of FEN (move counts and en passant)
-  while (whitespace < CASTLE_WHITESPACE)
+  // initialize castling ability
+  for (auto piece : player->pieces)
   {
-    if (game->fen[i] == ' ')
-      whitespace++;
-    i--;
-  }
+    // whether king moved
+    if (piece->type == "King")
+    {
+      if (piece->has_moved)
+        castle.king_moved = true;
+    }
 
-  // i is the last character of the castling capability
-  if (player->color == BLACK)
-  {
-    if (game->fen[i] == 'q')
-      castle.queen_rook_moved = false;
-    else
-      castle.queen_rook_moved = true;
+    // whether queen-side or king-side rooks have moved
+    if (piece->type == "Rook")
+    {
+      int index = getIndex(piece->rank, piece->file);
 
-    if (game->fen[i - 1] == 'k')
-      castle.king_rook_moved = false;
-    else
-      castle.king_rook_moved = true;
-  }
+      // queen-side
+      if (player->color == BLACK && index == B_ROOK_LEFT && !piece->has_moved)
+        castle.queen_rook_moved = false;
+      else if (player->color == WHITE && index == W_ROOK_LEFT && !piece->has_moved)
+        castle.queen_rook_moved = false;
+      else
+        castle.queen_rook_moved = true;
 
-  else // my color is white
-  {
-    if (game->fen[i - 2] == 'Q')
-      castle.queen_rook_moved = false;
-    else
-      castle.queen_rook_moved = true;
-
-    if (game->fen[i - 3] == 'K')
-      castle.king_rook_moved = false;
-    else
-      castle.king_rook_moved = true;
+      // king-side
+      if (player->color == BLACK && index == B_ROOK_RIGHT && !piece->has_moved)
+        castle.king_rook_moved = false;
+      else if (player->color == WHITE && index == W_ROOK_RIGHT && !piece->has_moved)
+        castle.king_rook_moved = false;
+      else
+        castle.king_rook_moved = true;
+    }
   }
 }
 
@@ -339,7 +332,7 @@ void AI::findMovablePieces(vector<PieceToMove>& movable_pieces,
         }
 
         if (can_castle)
-          ;piece_to_move.piece_moves[king_location - CASTLE];
+          piece_to_move.piece_moves[king_location - CASTLE];
       }
     }
     else if (piece->type == "Queen")
