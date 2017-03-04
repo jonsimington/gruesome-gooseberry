@@ -188,6 +188,7 @@ void AI::print_current_board()
 // this will initialize castling ability based on game's starting FEN
 void AI::initializeCastling()
 {
+  // skip from end of FEN string to the castling section (3 whitespaces)
   int whitespace = 0;
   int i = game->fen.size() - 1;
   while (whitespace < CASTLE_WHITESPACE)
@@ -240,6 +241,7 @@ bool AI::checkEnPassant(string& last_move)
 {
   bool can_en_passant = false;
 
+  // if the opponent moved before this turn
   if (game->moves.size() > 0)
   {
     last_move = game->moves[game->moves.size() - 1]->san;
@@ -255,8 +257,9 @@ bool AI::checkEnPassant(string& last_move)
 
   else // opponent hasn't moved yet
   {
+    // en passant section of FEN string
     if (game->fen[game->fen.size() - EN_PASSANT_FEN] != '-')
-      can_en_passant = true;
+      can_en_passant = false;
   }
 
   return can_en_passant;
@@ -268,9 +271,7 @@ int AI::getKingLocation()
   for (auto piece : player->pieces)
   {
     if (piece->type == "King")
-    {
       return getIndex(piece->rank, piece->file);
-    }
   }
 }
 
@@ -303,6 +304,7 @@ void AI::findMovablePieces(vector<PieceToMove>& movable_pieces,
   Chessboard& board, const bitset<BOARD_SIZE>& attacked, const int king_location,
   const string last_move, const bool can_en_passant)
 {
+  // for all of my pieces
   for (auto piece : player->pieces)
   {
     int i = getIndex(piece->rank, piece->file); // location of piece
@@ -396,7 +398,7 @@ void AI::findMovablePieces(vector<PieceToMove>& movable_pieces,
       }
     }
 
-    // if the piece can move to any other squares
+    // if the piece has possible moves
     if (piece_to_move.piece_moves.count() > 0)
     {
       piece_to_move.piece_rank = getRank(i);
