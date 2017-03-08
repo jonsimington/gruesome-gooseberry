@@ -494,9 +494,39 @@ void AI::findMoves(const int king_location,
         state.board.readBoard(new_black, new_white);
         bitset<BOARD_SIZE> attacked = getAttacked(player->opponent->color, state.board, attack);
 
+        // true if this move will cause a simplified draw
+        bool will_draw = false;
+
+        // if we're one move from a draw
+        if (near_draw)
+        {
+          string from_file_1 = game->moves[game->moves.size() - DRAW_SHIFT]->from_file;
+          string to_file_1 = game->moves[game->moves.size() - DRAW_SHIFT]->to_file;
+          int from_rank_1 = game->moves[game->moves.size() - DRAW_SHIFT]->from_rank;
+          int to_rank_1 = game->moves[game->moves.size() - DRAW_SHIFT]->to_rank;
+
+          string from_file_2 = getFile(current_index);
+          string to_file_2 = getFile(new_index);
+          int from_rank_2 = getRank(current_index);
+          int to_rank_2 = getRank(new_index);
+
+          // if this move is identical to the move made 4 plys ago
+          if (from_file_1 == from_file_2 && to_file_1 == to_file_2
+            && from_rank_1 == from_rank_2 && to_rank_1 == to_rank_2)
+          {
+            will_draw = true;
+          }
+        }
+        // 
+        // if (will_draw)
+        // {
+        //   cout << "will draw......." << endl;
+        //   cout << "current: " << current_index << ", new: " << new_index << endl;
+        // }
+
         // if the king isn't checked after this move is completed and
         // if this move doesn't lead to a simplified draw
-        if (!isAttacked(attacked, location))
+        if (!isAttacked(attacked, location) && !will_draw)
         {
           state.current_index = current_index;
           state.new_index = new_index;
@@ -519,22 +549,24 @@ void AI::findMoves(const int king_location,
 // returns true if one move from a draw; false otherwise
 bool AI::drawSetup()
 {
-  // assume we're one move from a draw
-  bool draw_ready = true;
+  // assume we're not ready for a draw
+  bool draw_ready = false;
 
   // if there have been 7+ moves
   if (game->moves.size() >= DRAW_MOVES)
   {
-    cout << game->moves.size() << endl;
+    // set draw_ready true; make false if draw conditions broken
+    draw_ready = true;
+
     // false if it finds any captures, promotions, or pawn movements
     bool draw_possible = true;
 
     // for the last seven moves
-    for (int i = game->moves.size() - 1; i >= game->moves.size() - DRAW_MOVES; i++)
+    for (int i = game->moves.size() - DRAW_MOVES; i < game->moves.size(); i++)
     {
       // if a pawn moved or promoted or a piece was captured
-      // if (game->moves[i]->promotion != "" || game->moves[i]->piece->type == "Pawn"
-      //   || game->moves[i]->captured != NULL)
+      if (game->moves[i]->promotion != "" || game->moves[i]->piece->type == "Pawn"
+        || game->moves[i]->captured != NULL)
       {
         draw_possible = false;
         draw_ready = false;
@@ -559,9 +591,9 @@ bool AI::drawSetup()
         int from_rank_2 = game->moves[game->moves.size() - j - DRAW_SHIFT]->from_rank;
         int to_rank_2 = game->moves[game->moves.size() - j - DRAW_SHIFT]->to_rank;
 
-        // if (game->moves.size() - DRAW_SHIFT - j != if game->moves.size() - j)
-        if (from_file_1 == from_file_2 && to_file_1 == to_file_2
-          && from_rank_1 == from_rank_2 && to_rank_1 == to_rank_2)
+        // if the two moves are identical
+        if (from_file_1 != from_file_2 || to_file_1 != to_file_2
+          || from_rank_1 != from_rank_2 || to_rank_1 != to_rank_2)
         {
           draw_ready = false;
           break;
