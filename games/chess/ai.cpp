@@ -81,7 +81,7 @@ bool AI::run_turn()
 
   // generate new moves
   vector<PieceToMove> movable_pieces;
-  vector<NewState> possible_states;
+  vector<State> possible_states;
 
   // check if en passant is possible
   string last_move;
@@ -103,16 +103,15 @@ bool AI::run_turn()
   // for all movable pieces, find valid moves
   findMoves(king_location, black_pieces, white_pieces, movable_pieces, possible_states);
 
-  // pick random state
-  int rand_state = rand() % possible_states.size();
-  PieceToMove rand_piece = getRandomPiece(rand_state, movable_pieces, possible_states);
+  // find the best move
+  State best_move = minimax(possible_states, MAX);
+  cout << "MAX: " << best_move.utility << endl;
 
   // update castling
-  updateCastlingAbility(possible_states[rand_state]);
+  updateCastlingAbility(best_move.current_index);
 
   // send the move to the game server
-  makeMove(possible_states[rand_state].current_index,
-    possible_states[rand_state].new_index, rand_piece.piece_moves);
+  makeMove(best_move.current_index, best_move.new_index);
 
   cout << "Time Remaining: " << player->time_remaining << " ns" << endl;
 
@@ -414,8 +413,10 @@ void AI::findMovablePieces(vector<PieceToMove>& movable_pieces,
 // this filters out all illegal moves from all movable pieces
 void AI::findMoves(const int king_location,
   const vector<BasicPiece>& black, const vector<BasicPiece>& white,
-  vector<PieceToMove>& moves, vector<NewState>& states)
+  vector<PieceToMove>& moves, vector<State>& states)
 {
+  bool near_draw = drawSetup();
+
   // for all movable pieces
   for (int i = 0; i < moves.size(); i++)
   {
@@ -433,7 +434,7 @@ void AI::findMoves(const int king_location,
       if (moves[i].piece_moves[new_index] == 1)
       {
         // create a new state and move piece i to square new_index
-        NewState state;
+        State state;
         vector<BasicPiece> new_black = black;
         vector<BasicPiece> new_white = white;
 
@@ -493,7 +494,8 @@ void AI::findMoves(const int king_location,
         state.board.readBoard(new_black, new_white);
         bitset<BOARD_SIZE> attacked = getAttacked(player->opponent->color, state.board, attack);
 
-        // if the king isn't checked after this move is completed
+        // if the king isn't checked after this move is completed and
+        // if this move doesn't lead to a simplified draw
         if (!isAttacked(attacked, location))
         {
           state.current_index = current_index;
@@ -514,47 +516,130 @@ void AI::findMoves(const int king_location,
   return;
 }
 
-// this will pick a random piece and a random location to move the piece to
-PieceToMove AI::getRandomPiece(const int random,
-  const vector<PieceToMove>& moves, const vector<NewState>& states)
+// returns true if one move from a draw; false otherwise
+bool AI::drawSetup()
 {
-  PieceToMove rand_piece;
+  // assume we're one move from a draw
+  bool draw_ready = true;
 
-  // get all completely valid moves for this piece
-  for (int i = 0; i < moves.size(); i++)
+  // if there have been 7+ moves
+  if (game->moves.size() >= DRAW_MOVES)
   {
-    int index = getIndex(moves[i].piece_rank, moves[i].piece_file);
+    cout << game->moves.size() << endl;
+    // false if it finds any captures, promotions, or pawn movements
+    bool draw_possible = true;
 
-    if (index == states[random].current_index)
+    // for the last seven moves
+    for (int i = game->moves.size() - 1; i >= game->moves.size() - DRAW_MOVES; i++)
     {
-      rand_piece = moves[i];
-      break;
+      // if a pawn moved or promoted or a piece was captured
+      // if (game->moves[i]->promotion != "" || game->moves[i]->piece->type == "Pawn"
+      //   || game->moves[i]->captured != NULL)
+      {
+        draw_possible = false;
+        draw_ready = false;
+        break;
+      }
+    }
+
+    // if there were no pawn movements or pawn promotions or piece captures
+    if (draw_possible)
+    {
+      // start at size - 1; for the last three pairs of moves
+      for (int j = 1; j < DRAW_SHIFT; j++)
+      {
+        // all location information for each move
+        string from_file_1 = game->moves[game->moves.size() - j]->from_file;
+        string to_file_1 = game->moves[game->moves.size() - j]->to_file;
+        int from_rank_1 = game->moves[game->moves.size() - j]->from_rank;
+        int to_rank_1 = game->moves[game->moves.size() - j]->to_rank;
+
+        string from_file_2 = game->moves[game->moves.size() - j - DRAW_SHIFT]->from_file;
+        string to_file_2 = game->moves[game->moves.size() - j - DRAW_SHIFT]->to_file;
+        int from_rank_2 = game->moves[game->moves.size() - j - DRAW_SHIFT]->from_rank;
+        int to_rank_2 = game->moves[game->moves.size() - j - DRAW_SHIFT]->to_rank;
+
+        // if (game->moves.size() - DRAW_SHIFT - j != if game->moves.size() - j)
+        if (from_file_1 == from_file_2 && to_file_1 == to_file_2
+          && from_rank_1 == from_rank_2 && to_rank_1 == to_rank_2)
+        {
+          draw_ready = false;
+          break;
+        }
+      } // for last three pairs of moves
+    } // if draw conditions met so far
+  } // if there have been 7+ moves
+
+  return draw_ready;
+}
+
+// this will use IDDLMM to pick which move to make
+State AI::minimax(vector<State>& states, string max_min)
+{
+  State best_move = states[0];
+  int best_utility;
+
+  // initialize utility outside the realm of possibility
+  if (max_min == MAX)
+    best_utility = (MAX_POINTS * -1) - 1; // below possible range
+  else // MIN player
+    best_utility = MAX_POINTS + 1; // above possible range
+
+  for (auto state : states)
+  {
+    state.utility = state.board.getUtility(player->color);
+
+    // MAX
+    if (max_min == MAX)
+    {
+      if (state.utility > best_utility)
+      {
+        best_utility = state.utility;
+        best_move = state;
+      }
+    }
+
+    // MIN
+    else // player is white
+    {
+      if (state.utility < best_utility)
+      {
+        best_utility = state.utility;
+        best_move = state;
+      }
     }
   }
 
-  return rand_piece;
+  best_move.utility = best_utility;
+  return best_move;
 }
 
 // if the last piece moved affects castling ability, update variables
-void AI::updateCastlingAbility(const NewState& state)
+void AI::updateCastlingAbility(const int current_index)//const State& state)
 {
   if (player->color == BLACK)
   {
-    if (state.current_index == B_ROOK_LEFT)
+    // if (state.current_index == B_ROOK_LEFT)
+    if (current_index == B_ROOK_LEFT)
       castle.queen_rook_moved = true;
-    else if (state.current_index == B_ROOK_RIGHT)
+    // else if (state.current_index == B_ROOK_RIGHT)
+    else if (current_index == B_ROOK_RIGHT)
       castle.king_rook_moved = true;
-    else if (state.current_index == B_KING)
+    // else if (state.current_index == B_KING)
+    else if (current_index == B_KING)
       castle.king_moved = true;
   }
 
   else // my color is white
   {
-    if (state.current_index == W_ROOK_LEFT)
+    // if (state.current_index == W_ROOK_LEFT)
+    if (current_index == W_ROOK_LEFT)
       castle.queen_rook_moved = true;
-    else if (state.current_index == W_ROOK_RIGHT)
+    // else if (state.current_index == W_ROOK_RIGHT)
+    else if (current_index == W_ROOK_RIGHT)
       castle.king_rook_moved = true;
-    else if (state.current_index == W_KING)
+    // else if (state.current_index == W_KING)
+    else if (current_index == W_KING)
       castle.king_moved = true;
   }
 
@@ -562,7 +647,7 @@ void AI::updateCastlingAbility(const NewState& state)
 }
 
 // this function will send the move to the game server and print all valid moves
-void AI::makeMove(const int old_index, const int new_index, bitset<BOARD_SIZE> moves)
+void AI::makeMove(const int old_index, const int new_index)//, bitset<BOARD_SIZE> moves)
 {
   // gather all location info
   string from_file = getFile(old_index);
@@ -575,29 +660,30 @@ void AI::makeMove(const int old_index, const int new_index, bitset<BOARD_SIZE> m
   {
     // if piece is the one we intend to move
     if (piece->file == from_file && piece->rank == from_rank)
-    {
-      cout << piece->type << " on " << from_file << from_rank << " can move to:" << endl;
+    // {
+      piece->move(to_file, to_rank, "Queen");
+      // cout << piece->type << " on " << from_file << from_rank << " can move to:" << endl;
+      //
+      // // output all completely valid moves
+      // for (int i = 0; i < moves.size(); i++)
+      // {
+      //   if (moves[i] == 1)
+      //     cout << "\t" << getFile(i) << getRank(i) << endl;
+      // }
 
-      // output all completely valid moves
-      for (int i = 0; i < moves.size(); i++)
-      {
-        if (moves[i] == 1)
-          cout << "\t" << getFile(i) << getRank(i) << endl;
-      }
-
-      // promote to random type
-      int random_type = rand() % PROMOTE_TYPES;
-
-      if (random_type == 0)
-        piece->move(to_file, to_rank, "Queen");
-      else if (random_type == 1)
-        piece->move(to_file, to_rank, "Rook");
-      else if (random_type == 2)
-        piece->move(to_file, to_rank, "Bishop");
-      else if (random_type == 3)
-        piece->move(to_file, to_rank, "Knight");
-      break;
-    }
+      // // promote to random type
+      // int random_type = rand() % PROMOTE_TYPES;
+      //
+      // if (random_type == 0)
+      //   piece->move(to_file, to_rank, "Queen");
+      // else if (random_type == 1)
+      //   piece->move(to_file, to_rank, "Rook");
+      // else if (random_type == 2)
+      //   piece->move(to_file, to_rank, "Bishop");
+      // else if (random_type == 3)
+      //   piece->move(to_file, to_rank, "Knight");
+      // break;
+    // }
   }
 
   return;

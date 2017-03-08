@@ -42,6 +42,7 @@ public:
 	Chessboard();
 	Chessboard(const Chessboard& b);
 
+  int getUtility(const string color);
   void readBoard(vector<BasicPiece> blk_pieces, vector<BasicPiece> wht_pieces);
   bitset<BOARD_SIZE> getKingMoves(const string c, const int i, const AttackPiece& a);
   bitset<BOARD_SIZE> getQueenMoves(const string c, const int i, const AttackPiece& a);
@@ -50,7 +51,6 @@ public:
   bitset<BOARD_SIZE> getKnightMoves(const string c, const int i, const AttackPiece& a);
   bitset<BOARD_SIZE> getPawnMoves(const string c, const int i, const AttackPiece& a);
   bitset<BOARD_SIZE> getPawnAttacks(const string c, const int i, const AttackPiece& a);
-  bool gameOver();
 };
 
 // information about each movable piece, including all locations it can move to
@@ -63,11 +63,12 @@ struct PieceToMove
 };
 
 // holds the board setup after a piece moves from current_index to new_index
-struct NewState
+struct State
 {
   Chessboard board;
   int current_index;
   int new_index;
+  int utility;
 };
 
 // additional, non-class-specific functions

@@ -10,10 +10,18 @@
 using namespace std;
 
 // general game-wide constants
+const int MAX_POINTS = 103; // one side has 9 Q, 1 K, and 2 each of B, R, N
+                            // and the other side only has a king
+const int DRAW_MOVES = 7; // 7 moves must occur before the next move can cause draw
+const int DRAW_SHIFT = 4; // draw checks moves separated by 3 other moves for equivalence
 const int NUM_TYPES = 6; // king, queen, rook, bishop, knight, pawn
 const int BOARD_SIZE = 64; // 64 squares on a chessboard
 const string BLACK = "Black";
 const string WHITE = "White";
+
+// minimax
+const string MAX = "max";
+const string MIN = "min";
 
 // difference in  indices for different types of moves
 const int HEIGHT_WIDTH = 8; // moving up/down; also marks left/right edges
@@ -22,6 +30,13 @@ const int LEFT_RIGHT = 1; // moving left/right
 const int NW_SE_DIAGONAL = 7; // moving along \ line
 const int NE_SW_DIAGONAL = 9; // moving along / line
 const int PAWN_START = 2; // pawn can move twice at the start
+
+// piece values
+const int QUEEN_VALUE = 9;
+const int ROOK_VALUE = 5;
+const int BISHOP_VALUE = 3;
+const int KNIGHT_VALUE = 3;
+const int PAWN_VALUE = 1;
 
 // special move conditions
 const int PROMOTE_TYPES = 4; // pawn can promote to one of four types
@@ -42,10 +57,10 @@ const int KNIGHT_MOVES[KNIGHT_DIRECTIONS] = {17, 15, 10, 6};
 // index of each type of piece in the arrays of bitboards
 const int KING = 0;
 const int QUEEN = 1;
-const int ROOKS = 2;
-const int BISHOPS = 3;
-const int KNIGHTS = 4;
-const int PAWNS = 5;
+const int ROOK = 2;
+const int BISHOP = 3;
+const int KNIGHT = 4;
+const int PAWN = 5;
 
 // starting locations of key black pieces (pawns have a range)
 const int B_KING = 60;

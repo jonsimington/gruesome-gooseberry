@@ -99,13 +99,13 @@ bitset<BOARD_SIZE> getAttacked(const string their_color, Chessboard& board, cons
         attacked |= board.getKingMoves(their_color, i, attack);
       else if (board.black[QUEEN][i] == 1)
         attacked |= board.getQueenMoves(their_color, i, attack);
-      else if (board.black[ROOKS][i] == 1)
+      else if (board.black[ROOK][i] == 1)
         attacked |= board.getRookMoves(their_color, i, attack);
-      else if (board.black[BISHOPS][i] == 1)
+      else if (board.black[BISHOP][i] == 1)
         attacked |= board.getBishopMoves(their_color, i, attack);
-      else if (board.black[KNIGHTS][i] == 1)
+      else if (board.black[KNIGHT][i] == 1)
         attacked |= board.getKnightMoves(their_color, i, attack);
-      else if (board.black[PAWNS][i] == 1)
+      else if (board.black[PAWN][i] == 1)
         attacked |= board.getPawnAttacks(their_color, i, attack);
     }
 
@@ -116,13 +116,13 @@ bitset<BOARD_SIZE> getAttacked(const string their_color, Chessboard& board, cons
         attacked |= board.getKingMoves(their_color, i, attack);
       else if (board.white[QUEEN][i] == 1)
         attacked |= board.getQueenMoves(their_color, i, attack);
-      else if (board.white[ROOKS][i] == 1)
+      else if (board.white[ROOK][i] == 1)
         attacked |= board.getRookMoves(their_color, i, attack);
-      else if (board.white[BISHOPS][i] == 1)
+      else if (board.white[BISHOP][i] == 1)
         attacked |= board.getBishopMoves(their_color, i, attack);
-      else if (board.white[KNIGHTS][i] == 1)
+      else if (board.white[KNIGHT][i] == 1)
         attacked |= board.getKnightMoves(their_color, i, attack);
-      else if (board.white[PAWNS][i] == 1)
+      else if (board.white[PAWN][i] == 1)
         attacked |= board.getPawnAttacks(their_color, i, attack);
     }
   }
@@ -201,6 +201,59 @@ Chessboard::Chessboard(const Chessboard& b)
   }
 }
 
+// calculates the utility of a specific board setup
+int Chessboard::getUtility(const string color)
+{
+  int utility = 0;
+  bitset<BOARD_SIZE> my_side[NUM_TYPES];
+  bitset<BOARD_SIZE> their_side[NUM_TYPES];
+
+  if (color == BLACK)
+  {
+    for (int i = 0; i < NUM_TYPES; i++)
+    {
+      my_side[i] = black[i];
+      their_side[i] = white[i];
+    }
+  }
+
+  else // color is white
+  {
+    for (int i = 0; i < NUM_TYPES; i++)
+    {
+      my_side[i] = white[i];
+      their_side[i] = black[i];
+    }
+  }
+
+  // for all squares on the board
+  for (int i = 0; i < BOARD_SIZE; i++)
+  {
+    if (my_side[QUEEN][i] == 1)
+      utility += QUEEN_VALUE;
+    else if (my_side[ROOK][i] == 1)
+      utility += ROOK_VALUE;
+    else if (my_side[BISHOP][i] == 1)
+      utility += BISHOP_VALUE;
+    else if (my_side[KNIGHT][i] == 1)
+      utility += KNIGHT_VALUE;
+    else if (my_side[PAWN][i] == 1)
+      utility += PAWN_VALUE;
+    else if (their_side[QUEEN][i] == 1)
+      utility -= QUEEN_VALUE;
+    else if (their_side[ROOK][i] == 1)
+      utility -= ROOK_VALUE;
+    else if (their_side[BISHOP][i] == 1)
+      utility -= BISHOP_VALUE;
+    else if (their_side[KNIGHT][i] == 1)
+      utility -= KNIGHT_VALUE;
+    else if (their_side[PAWN][i] == 1)
+      utility -= PAWN_VALUE;
+  }
+
+  return utility;
+}
+
 // places black and white pieces according to current board state
 void Chessboard::readBoard(vector<BasicPiece> blk_pieces, vector<BasicPiece> wht_pieces)
 {
@@ -212,13 +265,13 @@ void Chessboard::readBoard(vector<BasicPiece> blk_pieces, vector<BasicPiece> wht
     else if (blk_pieces[i].type == "Queen")
       black[QUEEN][blk_pieces[i].index] = 1;
     else if (blk_pieces[i].type == "Rook")
-      black[ROOKS][blk_pieces[i].index] = 1;
+      black[ROOK][blk_pieces[i].index] = 1;
     else if (blk_pieces[i].type == "Bishop")
-      black[BISHOPS][blk_pieces[i].index] = 1;
+      black[BISHOP][blk_pieces[i].index] = 1;
     else if (blk_pieces[i].type == "Knight")
-      black[KNIGHTS][blk_pieces[i].index] = 1;
+      black[KNIGHT][blk_pieces[i].index] = 1;
     else if (blk_pieces[i].type == "Pawn")
-      black[PAWNS][blk_pieces[i].index] = 1;
+      black[PAWN][blk_pieces[i].index] = 1;
   }
 
   // for all white pieces
@@ -229,20 +282,20 @@ void Chessboard::readBoard(vector<BasicPiece> blk_pieces, vector<BasicPiece> wht
     else if (wht_pieces[i].type == "Queen")
       white[QUEEN][wht_pieces[i].index] = 1;
     else if (wht_pieces[i].type == "Rook")
-      white[ROOKS][wht_pieces[i].index] = 1;
+      white[ROOK][wht_pieces[i].index] = 1;
     else if (wht_pieces[i].type == "Bishop")
-      white[BISHOPS][wht_pieces[i].index] = 1;
+      white[BISHOP][wht_pieces[i].index] = 1;
     else if (wht_pieces[i].type == "Knight")
-      white[KNIGHTS][wht_pieces[i].index] = 1;
+      white[KNIGHT][wht_pieces[i].index] = 1;
     else if (wht_pieces[i].type == "Pawn")
-      white[PAWNS][wht_pieces[i].index] = 1;
+      white[PAWN][wht_pieces[i].index] = 1;
   }
 
   // all pieces
-  b_pieces = black[KING] | black[QUEEN] | black[ROOKS]
-    | black[BISHOPS] | black[KNIGHTS] | black[PAWNS];
-  w_pieces = white[KING] | white[QUEEN] | white[ROOKS]
-    | white[BISHOPS] | white[KNIGHTS] | white[PAWNS];
+  b_pieces = black[KING] | black[QUEEN] | black[ROOK]
+    | black[BISHOP] | black[KNIGHT] | black[PAWN];
+  w_pieces = white[KING] | white[QUEEN] | white[ROOK]
+    | white[BISHOP] | white[KNIGHT] | white[PAWN];
   all_pieces = b_pieces | w_pieces;
 
   return;

@@ -91,11 +91,13 @@ public:
       const string last_move, const bool can_en_passant);
     void findMoves(const int king_location,
       const vector<BasicPiece>& black, const vector<BasicPiece>& white,
-      vector<PieceToMove>& moves, vector<NewState>& states);
-    PieceToMove getRandomPiece(const int random,
-      const vector<PieceToMove>& moves, const vector<NewState>& states);
-    void updateCastlingAbility(const NewState& state);
-    void makeMove(const int old_index, const int new_index, bitset<BOARD_SIZE> moves);
+      vector<PieceToMove>& moves, vector<State>& states);
+    State minimax(vector<State>& states, string max_min);
+    // PieceToMove getRandomPiece(const int random,
+    //   const vector<PieceToMove>& moves, const vector<State>& states);
+    void updateCastlingAbility(const int current_index);//const State& state);
+    bool drawSetup();
+    void makeMove(const int old_index, const int new_index);//, bitset<BOARD_SIZE> moves);
 
     // ####################
     // Don't edit these!
