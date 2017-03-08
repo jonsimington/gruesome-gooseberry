@@ -446,6 +446,8 @@ void AI::findMoves(const int king_location,
             // found the piece we want to move
             if (new_black[b].index == current_index)
             {
+              state.type = new_black[b].type;
+
               // if we're moving the king, update its location
               if (new_black[b].type == "King")
                 location = new_index;
@@ -472,6 +474,8 @@ void AI::findMoves(const int king_location,
             // found the piece we want to move
             if (new_white[w].index == current_index)
             {
+              state.type = new_white[w].type;
+
               // if we're moving the king, update its location
               if (new_white[w].type == "King")
                 location = new_index;
@@ -517,12 +521,6 @@ void AI::findMoves(const int king_location,
             will_draw = true;
           }
         }
-        // 
-        // if (will_draw)
-        // {
-        //   cout << "will draw......." << endl;
-        //   cout << "current: " << current_index << ", new: " << new_index << endl;
-        // }
 
         // if the king isn't checked after this move is completed and
         // if this move doesn't lead to a simplified draw
@@ -619,7 +617,19 @@ State AI::minimax(vector<State>& states, string max_min)
 
   for (auto state : states)
   {
-    state.utility = state.board.getUtility(player->color);
+    state.utility = state.board.getUtility(player->color, attack);
+
+    // favor moving stronger pieces
+    if (state.type == "Queen")
+      state.utility += QUEEN_VALUE;
+    else if (state.type == "Rook")
+      state.utility += ROOK_VALUE;
+    else if (state.type == "Bishop")
+      state.utility += BISHOP_VALUE;
+    else if (state.type == "Knight")
+      state.utility += KNIGHT_VALUE;
+    else if (state.type == "Pawn")
+      state.utility += PAWN_VALUE;
 
     // MAX
     if (max_min == MAX)
@@ -647,7 +657,7 @@ State AI::minimax(vector<State>& states, string max_min)
 }
 
 // if the last piece moved affects castling ability, update variables
-void AI::updateCastlingAbility(const int current_index)//const State& state)
+void AI::updateCastlingAbility(const int current_index)
 {
   if (player->color == BLACK)
   {
@@ -679,7 +689,7 @@ void AI::updateCastlingAbility(const int current_index)//const State& state)
 }
 
 // this function will send the move to the game server and print all valid moves
-void AI::makeMove(const int old_index, const int new_index)//, bitset<BOARD_SIZE> moves)
+void AI::makeMove(const int old_index, const int new_index)
 {
   // gather all location info
   string from_file = getFile(old_index);

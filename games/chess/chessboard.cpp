@@ -202,14 +202,22 @@ Chessboard::Chessboard(const Chessboard& b)
 }
 
 // calculates the utility of a specific board setup
-int Chessboard::getUtility(const string color)
+int Chessboard::getUtility(const string color, const AttackPiece& attack)
 {
   int utility = 0;
   bitset<BOARD_SIZE> my_side[NUM_TYPES];
   bitset<BOARD_SIZE> their_side[NUM_TYPES];
+  bitset<BOARD_SIZE> all_my_pieces;
+  bitset<BOARD_SIZE> all_their_pieces;
+  bitset<BOARD_SIZE> my_attacks = getAttacked(color, *this, attack);
+  bitset<BOARD_SIZE> their_attacks = getAttacked(
+    (color == BLACK ? WHITE : BLACK), *this, attack);
 
   if (color == BLACK)
   {
+    // all_my_pieces = black_pieces;
+    // all_their_pieces = white_pieces;
+
     for (int i = 0; i < NUM_TYPES; i++)
     {
       my_side[i] = black[i];
@@ -219,12 +227,27 @@ int Chessboard::getUtility(const string color)
 
   else // color is white
   {
+    // all_my_pieces = white_pieces;
+    // all_their_pieces = black_pieces;
+
     for (int i = 0; i < NUM_TYPES; i++)
     {
       my_side[i] = white[i];
       their_side[i] = black[i];
     }
   }
+
+  utility += (my_attacks & their_side[QUEEN]).count() * QUEEN_VALUE;
+  utility += (my_attacks & their_side[ROOK]).count() * ROOK_VALUE;
+  utility += (my_attacks & their_side[BISHOP]).count() * BISHOP_VALUE;
+  utility += (my_attacks & their_side[KNIGHT]).count() * KNIGHT_VALUE;
+  utility += (my_attacks & their_side[BISHOP]).count() * PAWN_VALUE;
+
+  utility -= (their_attacks & their_side[QUEEN]).count() * QUEEN_VALUE;
+  utility -= (their_attacks & their_side[ROOK]).count() * ROOK_VALUE;
+  utility -= (their_attacks & their_side[BISHOP]).count() * BISHOP_VALUE;
+  utility -= (their_attacks & their_side[KNIGHT]).count() * KNIGHT_VALUE;
+  utility -= (their_attacks & their_side[PAWN]).count() * PAWN_VALUE;
 
   // for all squares on the board
   for (int i = 0; i < BOARD_SIZE; i++)

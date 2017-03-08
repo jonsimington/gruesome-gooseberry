@@ -42,7 +42,7 @@ public:
 	Chessboard();
 	Chessboard(const Chessboard& b);
 
-  int getUtility(const string color);
+  int getUtility(const string color, const AttackPiece& attack);
   void readBoard(vector<BasicPiece> blk_pieces, vector<BasicPiece> wht_pieces);
   bitset<BOARD_SIZE> getKingMoves(const string c, const int i, const AttackPiece& a);
   bitset<BOARD_SIZE> getQueenMoves(const string c, const int i, const AttackPiece& a);
@@ -66,6 +66,7 @@ struct PieceToMove
 struct State
 {
   Chessboard board;
+  string type;
   int current_index;
   int new_index;
   int utility;
