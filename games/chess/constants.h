@@ -32,6 +32,7 @@ const int NE_SW_DIAGONAL = 9; // moving along / line
 const int PAWN_START = 2; // pawn can move twice at the start
 
 // piece values
+const int KING_VALUE = 20; // only used when seeing if a move checks the king
 const int QUEEN_VALUE = 9;
 const int ROOK_VALUE = 5;
 const int BISHOP_VALUE = 3;

@@ -83,8 +83,8 @@ public:
 
     // my functions
     void initializeCastling();
-    bool checkEnPassant(string& last_move);
-    int getKingLocation();
+    bool initializeEnPassant(string& last_move);
+    int getKingLocation(const vector<BasicPiece>& pieces);
     void findPieces(vector<BasicPiece>& black_pieces, vector<BasicPiece>& white_pieces);
     void findMovablePieces(vector<PieceToMove>& movable_pieces,
       Chessboard& board, const bitset<BOARD_SIZE>& attacked, const int king_location,

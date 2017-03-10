@@ -207,17 +207,16 @@ int Chessboard::getUtility(const string color, const AttackPiece& attack)
   int utility = 0;
   bitset<BOARD_SIZE> my_side[NUM_TYPES];
   bitset<BOARD_SIZE> their_side[NUM_TYPES];
+
   bitset<BOARD_SIZE> all_my_pieces;
   bitset<BOARD_SIZE> all_their_pieces;
+
   bitset<BOARD_SIZE> my_attacks = getAttacked(color, *this, attack);
   bitset<BOARD_SIZE> their_attacks = getAttacked(
     (color == BLACK ? WHITE : BLACK), *this, attack);
 
   if (color == BLACK)
   {
-    // all_my_pieces = black_pieces;
-    // all_their_pieces = white_pieces;
-
     for (int i = 0; i < NUM_TYPES; i++)
     {
       my_side[i] = black[i];
@@ -227,9 +226,6 @@ int Chessboard::getUtility(const string color, const AttackPiece& attack)
 
   else // color is white
   {
-    // all_my_pieces = white_pieces;
-    // all_their_pieces = black_pieces;
-
     for (int i = 0; i < NUM_TYPES; i++)
     {
       my_side[i] = white[i];
@@ -237,42 +233,37 @@ int Chessboard::getUtility(const string color, const AttackPiece& attack)
     }
   }
 
+  // bonus for what I attack
   utility += (my_attacks & their_side[QUEEN]).count() * QUEEN_VALUE;
   utility += (my_attacks & their_side[ROOK]).count() * ROOK_VALUE;
   utility += (my_attacks & their_side[BISHOP]).count() * BISHOP_VALUE;
   utility += (my_attacks & their_side[KNIGHT]).count() * KNIGHT_VALUE;
-  utility += (my_attacks & their_side[BISHOP]).count() * PAWN_VALUE;
+  utility += (my_attacks & their_side[PAWN]).count() * PAWN_VALUE;
 
-  utility -= (their_attacks & their_side[QUEEN]).count() * QUEEN_VALUE;
-  utility -= (their_attacks & their_side[ROOK]).count() * ROOK_VALUE;
-  utility -= (their_attacks & their_side[BISHOP]).count() * BISHOP_VALUE;
-  utility -= (their_attacks & their_side[KNIGHT]).count() * KNIGHT_VALUE;
-  utility -= (their_attacks & their_side[PAWN]).count() * PAWN_VALUE;
+  // penalty for what they attack
+  utility -= (their_attacks & my_side[QUEEN]).count() * QUEEN_VALUE;
+  utility -= (their_attacks & my_side[ROOK]).count() * ROOK_VALUE;
+  utility -= (their_attacks & my_side[BISHOP]).count() * BISHOP_VALUE;
+  utility -= (their_attacks & my_side[KNIGHT]).count() * KNIGHT_VALUE;
+  utility -= (their_attacks & my_side[PAWN]).count() * PAWN_VALUE;
 
-  // for all squares on the board
-  for (int i = 0; i < BOARD_SIZE; i++)
-  {
-    if (my_side[QUEEN][i] == 1)
-      utility += QUEEN_VALUE;
-    else if (my_side[ROOK][i] == 1)
-      utility += ROOK_VALUE;
-    else if (my_side[BISHOP][i] == 1)
-      utility += BISHOP_VALUE;
-    else if (my_side[KNIGHT][i] == 1)
-      utility += KNIGHT_VALUE;
-    else if (my_side[PAWN][i] == 1)
-      utility += PAWN_VALUE;
-    else if (their_side[QUEEN][i] == 1)
-      utility -= QUEEN_VALUE;
-    else if (their_side[ROOK][i] == 1)
-      utility -= ROOK_VALUE;
-    else if (their_side[BISHOP][i] == 1)
-      utility -= BISHOP_VALUE;
-    else if (their_side[KNIGHT][i] == 1)
-      utility -= KNIGHT_VALUE;
-    else if (their_side[PAWN][i] == 1)
-      utility -= PAWN_VALUE;
-  }
+  // // if it checks the king
+  // utility += (my_attacks & their_side[KING]).count() * KING_VALUE;
+  // utility -= (their_attacks & my_side[KING]).count() * KING_VALUE * KING_VALUE;
+
+  // all of my pieces
+  utility += my_side[QUEEN].count() * QUEEN_VALUE;
+  utility += my_side[ROOK].count() * ROOK_VALUE;
+  utility += my_side[BISHOP].count() * BISHOP_VALUE;
+  utility += my_side[KNIGHT].count() * KNIGHT_VALUE;
+  utility += my_side[PAWN].count() * PAWN_VALUE;
+
+  // all of their pieces
+  utility -= their_side[QUEEN].count() * QUEEN_VALUE;
+  utility -= their_side[ROOK].count() * ROOK_VALUE;
+  utility -= their_side[BISHOP].count() * BISHOP_VALUE;
+  utility -= their_side[KNIGHT].count() * KNIGHT_VALUE;
+  utility -= their_side[PAWN].count() * PAWN_VALUE;
 
   return utility;
 }

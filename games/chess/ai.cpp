@@ -85,17 +85,17 @@ bool AI::run_turn()
 
   // check if en passant is possible
   string last_move;
-  bool can_en_passant = checkEnPassant(last_move);
+  bool can_en_passant = initializeEnPassant(last_move);
 
   // get the current location of the king
-  int king_location = getKingLocation();
+  int king_location = getKingLocation((player->color == BLACK ? black_pieces : white_pieces));
 
   // check whether king has moved
-  if (player->color == BLACK && king_location != B_KING)
+  if ((player->color == BLACK && king_location != B_KING) ||
+      (player->color == WHITE && king_location != W_KING))
+  {
     castle.king_moved = true;
-
-  if (player->color == WHITE && king_location != W_KING)
-    castle.king_moved = true;
+  }
 
   // find all movable pieces and their possible moves (don't worry about check)
   findMovablePieces(movable_pieces, board, attacked, king_location, last_move, can_en_passant);
@@ -236,7 +236,7 @@ void AI::initializeCastling()
 }
 
 // this returns true if en passant is possible; returns false otherwise
-bool AI::checkEnPassant(string& last_move)
+bool AI::initializeEnPassant(string& last_move)
 {
   bool can_en_passant = false;
 
@@ -265,12 +265,12 @@ bool AI::checkEnPassant(string& last_move)
 }
 
 // this returns the king's index
-int AI::getKingLocation()
+int AI::getKingLocation(const vector<BasicPiece>& pieces)
 {
-  for (auto piece : player->pieces)
+  for (auto piece : pieces)
   {
-    if (piece->type == "King")
-      return getIndex(piece->rank, piece->file);
+    if (piece.type == "King")
+      return piece.index;
   }
 }
 
@@ -619,17 +619,17 @@ State AI::minimax(vector<State>& states, string max_min)
   {
     state.utility = state.board.getUtility(player->color, attack);
 
-    // favor moving stronger pieces
-    if (state.type == "Queen")
-      state.utility += QUEEN_VALUE;
-    else if (state.type == "Rook")
-      state.utility += ROOK_VALUE;
-    else if (state.type == "Bishop")
-      state.utility += BISHOP_VALUE;
-    else if (state.type == "Knight")
-      state.utility += KNIGHT_VALUE;
-    else if (state.type == "Pawn")
-      state.utility += PAWN_VALUE;
+    // // favor moving stronger pieces
+    // if (state.type == "Queen")
+    //   state.utility += QUEEN_VALUE;
+    // else if (state.type == "Rook")
+    //   state.utility += ROOK_VALUE;
+    // else if (state.type == "Bishop")
+    //   state.utility += BISHOP_VALUE;
+    // else if (state.type == "Knight")
+    //   state.utility += KNIGHT_VALUE;
+    // else if (state.type == "Pawn")
+    //   state.utility += PAWN_VALUE;
 
     // MAX
     if (max_min == MAX)
