@@ -7,13 +7,13 @@
 #include "chessboard.h"
 using namespace std;
 
-// returns the rank of a specific index
+// returns the rank of a specificolor index
 int getRank(const int i)
 {
   return i / HEIGHT_WIDTH + 1;
 }
 
-// returns the file of a specific index
+// returns the file of a specificolor index
 string getFile(const int i)
 {
   string file;
@@ -49,7 +49,7 @@ string getFile(const int i)
   return file;
 }
 
-// returns the index of a specific rank and file
+// returns the index of a specificolor rank and file
 int getIndex(const int rank, const string file)
 {
   int index = (rank - 1) * HEIGHT_WIDTH;
@@ -158,7 +158,7 @@ void printBoard(const bitset<BOARD_SIZE>& board)
 
   // output file labels
   cout << "   ---------------" << endl;
-  cout << "   a b c d e f g h" << endl;
+  cout << "   a b color d e f g h" << endl;
 
   cout << endl;
   return;
@@ -201,7 +201,7 @@ Chessboard::Chessboard(const Chessboard& b)
   }
 }
 
-// calculates the utility of a specific board setup
+// calculates the utility of a specificolor board setup
 int Chessboard::getUtility(const string color, const AttackPiece& attack)
 {
   int utility = 0;
@@ -316,22 +316,22 @@ void Chessboard::readBoard(vector<BasicPiece> blk_pieces, vector<BasicPiece> wht
 }
 
 // returns all valid king moves given the current location of all pieces
-bitset<BOARD_SIZE> Chessboard::getKingMoves(const string c, const int i, const AttackPiece& a)
+bitset<BOARD_SIZE> Chessboard::getKingMoves(const string color, const int i, const AttackPiece& a)
 {
-  if (c == BLACK) // black
+  if (color == BLACK) // black
     return a.attacking_king[i] & ~b_pieces;
   else // white
     return a.attacking_king[i] & ~w_pieces;
 }
 
 // returns all valid queen moves given the current location of all pieces
-bitset<BOARD_SIZE> Chessboard::getQueenMoves(const string c, const int i, const AttackPiece& a)
+bitset<BOARD_SIZE> Chessboard::getQueenMoves(const string color, const int i, const AttackPiece& a)
 {
   bitset<BOARD_SIZE> my_side;
   bitset<BOARD_SIZE> valid_moves;
   int slider; // moves along the entire straight line the piece can move
 
-  if (c == BLACK) // black
+  if (color == BLACK) // black
     my_side = b_pieces;
   else // white
     my_side = w_pieces;
@@ -510,13 +510,13 @@ bitset<BOARD_SIZE> Chessboard::getQueenMoves(const string c, const int i, const 
 }
 
 // returns all valid rook moves given the current location of all pieces
-bitset<BOARD_SIZE> Chessboard::getRookMoves(const string c, const int i, const AttackPiece& a)
+bitset<BOARD_SIZE> Chessboard::getRookMoves(const string color, const int i, const AttackPiece& a)
 {
   bitset<BOARD_SIZE> my_side;
   bitset<BOARD_SIZE> valid_moves;
   int slider; // moves along the entire straight line the piece can move
 
-  if (c == BLACK) // black
+  if (color == BLACK) // black
     my_side = b_pieces;
   else // white
     my_side = w_pieces;
@@ -611,14 +611,14 @@ bitset<BOARD_SIZE> Chessboard::getRookMoves(const string c, const int i, const A
 }
 
 // returns all valid bishop moves given the current location of all pieces
-bitset<BOARD_SIZE> Chessboard::getBishopMoves(const string c, const int i, const AttackPiece& a)
+bitset<BOARD_SIZE> Chessboard::getBishopMoves(const string color, const int i, const AttackPiece& a)
 {
   bitset<BOARD_SIZE> pieces = all_pieces;
   bitset<BOARD_SIZE> my_side;
   bitset<BOARD_SIZE> valid_moves;
   int slider; // moves along the entire straight line the piece can move
 
-  if (c == BLACK) // black
+  if (color == BLACK) // black
     my_side = b_pieces;
   else // white
     my_side = w_pieces;
@@ -713,21 +713,21 @@ bitset<BOARD_SIZE> Chessboard::getBishopMoves(const string c, const int i, const
 }
 
 // returns all valid knight moves given the current location of all pieces
-bitset<BOARD_SIZE> Chessboard::getKnightMoves(const string c, const int i, const AttackPiece& a)
+bitset<BOARD_SIZE> Chessboard::getKnightMoves(const string color, const int i, const AttackPiece& a)
 {
-  if (c == BLACK) // black
+  if (color == BLACK) // black
     return a.attacking_knight[i] & ~b_pieces;
   else // white
     return a.attacking_knight[i] & ~w_pieces;
 }
 
 // returns all valid pawn moves (no attacks) given the current location of all pieces
-bitset<BOARD_SIZE> Chessboard::getPawnMoves(const string c, const int i, const AttackPiece& a)
+bitset<BOARD_SIZE> Chessboard::getPawnMoves(const string color, const int i, const AttackPiece& a)
 {
   bitset<BOARD_SIZE> valid_moves;
   int slider = i;
 
-  if (c == BLACK) // black
+  if (color == BLACK) // black
   {
     valid_moves =  (a.attacking_b_pawn[i] & w_pieces) | (a.moving_b_pawn[i] & ~all_pieces);
 
@@ -749,9 +749,9 @@ bitset<BOARD_SIZE> Chessboard::getPawnMoves(const string c, const int i, const A
 }
 
 // returns all valid pawn attacks (no moves) given the current location of all pieces
-bitset<BOARD_SIZE> Chessboard::getPawnAttacks(const string c, const int i, const AttackPiece& a)
+bitset<BOARD_SIZE> Chessboard::getPawnAttacks(const string color, const int i, const AttackPiece& a)
 {
-  if (c == BLACK) // black
+  if (color == BLACK) // black
     return a.attacking_b_pawn[i] & ~b_pieces;
   else // white
     return a.attacking_w_pawn[i] & ~w_pieces;

@@ -101,7 +101,7 @@ bool AI::run_turn()
   findMovablePieces(movable_pieces, board, attacked, king_location, last_move, can_en_passant);
 
   // for all movable pieces, find valid moves
-  findMoves(king_location, black_pieces, white_pieces, movable_pieces, possible_states);
+  findMoves(king_location, board, movable_pieces, possible_states);
 
   // find the best move
   State best_move = minimax(possible_states, MAX);
@@ -303,118 +303,281 @@ void AI::findMovablePieces(vector<PieceToMove>& movable_pieces,
   Chessboard& board, const bitset<BOARD_SIZE>& attacked, const int king_location,
   const string last_move, const bool can_en_passant)
 {
-  // for all of my pieces
-  for (auto piece : player->pieces)
+  // king movements
   {
-    int i = getIndex(piece->rank, piece->file); // location of piece
     PieceToMove piece_to_move;
+    piece_to_move.piece_moves = board.getKingMoves(player->color, king_location, attack);
 
-    if (piece->type == "King")
+    // check if castling possible
+    int left;
+    int right;
+
+    // king-side
+    // if the pieces haven't moved and the king isn't in check
+    if (!castle.king_moved && !castle.king_rook_moved && !isAttacked(attacked, king_location))
     {
-      piece_to_move.piece_moves = board.getKingMoves(player->color, i, attack);
+      bool can_castle = true;
 
-      // check if castling possible
-      int left;
-      int right;
+      if (player->color == BLACK)
+        right = B_ROOK_RIGHT;
+      else
+        right = king_location + CASTLE;
 
-      // king-side
-      // if the pieces haven't moved and the king isn't in check
-      if (!castle.king_moved && !castle.king_rook_moved && !isAttacked(attacked, king_location))
+      // if squares between king and rook are attacked or blocked
+      for (int i = king_location + LEFT_RIGHT; i <= right; i++)
       {
-        bool can_castle = true;
-
-        if (player->color == BLACK)
-          right = B_ROOK_RIGHT;
-        else
-          right = king_location + CASTLE;
-
-        // if squares between king and rook are attacked or blocked
-        for (int i = king_location + LEFT_RIGHT; i <= right; i++)
-        {
-          if (isAttacked(attacked, i) || board.all_pieces[i] == 1)
-            can_castle = false;
-        }
-
-        if (can_castle)
-          piece_to_move.piece_moves[king_location + CASTLE];
+        if (isAttacked(attacked, i) || board.all_pieces[i] == 1)
+          can_castle = false;
       }
 
-      // queen-side
-      // if the pieces haven't moved and the king isn't in check
-      if (!castle.king_moved && !castle.queen_rook_moved && !isAttacked(attacked, king_location))
-      {
-        bool can_castle = true;
-
-        if (player->color == BLACK)
-          left = B_ROOK_LEFT + LEFT_RIGHT;
-        else
-          left = king_location - CASTLE;
-
-        // if squares between king and rook are attacked or blocked
-        for (int i = left; i < king_location; i++)
-        {
-          if (isAttacked(attacked, i) || board.all_pieces[i] == 1)
-            can_castle = false;
-        }
-
-        if (can_castle)
-          piece_to_move.piece_moves[king_location - CASTLE];
-      }
+      if (can_castle)
+        piece_to_move.piece_moves[king_location + CASTLE];
     }
-    else if (piece->type == "Queen")
-      piece_to_move.piece_moves = board.getQueenMoves(player->color, i, attack);
-    else if (piece->type == "Rook")
-      piece_to_move.piece_moves = board.getRookMoves(player->color, i, attack);
-    else if (piece->type == "Bishop")
-      piece_to_move.piece_moves = board.getBishopMoves(player->color, i, attack);
-    else if (piece->type == "Knight")
-      piece_to_move.piece_moves = board.getKnightMoves(player->color, i, attack);
-    else // pawn
+
+    // queen-side
+    // if the pieces haven't moved and the king isn't in check
+    if (!castle.king_moved && !castle.queen_rook_moved && !isAttacked(attacked, king_location))
     {
-      piece_to_move.piece_moves = board.getPawnMoves(player->color, i, attack);
+      bool can_castle = true;
 
-      if (can_en_passant)
+      if (player->color == BLACK)
+        left = B_ROOK_LEFT + LEFT_RIGHT;
+      else
+        left = king_location - CASTLE;
+
+      // if squares between king and rook are attacked or blocked
+      for (int i = left; i < king_location; i++)
       {
-        int index;
-
-        // figure out which index is the en passant square
-        if (player->color == BLACK)
-        {
-          index = getIndex(last_move[1] - 1, last_move[0] + "");
-
-          if (attack.attacking_b_pawn[i][index] == 1)
-            piece_to_move.piece_moves[index] = 1;
-        }
-
-        // figure out which index is the en passant square
-        else // my color is white
-        {
-          index = getIndex(last_move[1] + 1, last_move[0] + "");
-
-          if (attack.attacking_w_pawn[i][index] == 1)
-            piece_to_move.piece_moves[index] = 1;
-        }
+        if (isAttacked(attacked, i) || board.all_pieces[i] == 1)
+          can_castle = false;
       }
+
+      if (can_castle)
+        piece_to_move.piece_moves[king_location - CASTLE];
     }
 
     // if the piece has possible moves
     if (piece_to_move.piece_moves.count() > 0)
     {
-      piece_to_move.piece_rank = getRank(i);
-      piece_to_move.piece_file = getFile(i);
-      piece_to_move.piece_type = piece->type;
+      piece_to_move.piece_rank = getRank(king_location);
+      piece_to_move.piece_file = getFile(king_location);
+      piece_to_move.piece_type = "King";
       movable_pieces.push_back(piece_to_move);
     }
   }
+
+  // queen movements
+  for (int i = 0; i < BOARD_SIZE; i++)
+  {
+    if ((player->color == BLACK && board.black[QUEEN][i] == 1) ||
+      (player->color == WHITE && board.white[QUEEN][i] == 1))
+    {
+      PieceToMove piece_to_move;
+      piece_to_move.piece_moves = board.getQueenMoves(player->color, i, attack);
+
+      // if the piece has possible moves
+      if (piece_to_move.piece_moves.count() > 0)
+      {
+        piece_to_move.piece_rank = getRank(i);
+        piece_to_move.piece_file = getFile(i);
+        piece_to_move.piece_type = "Queen";
+        movable_pieces.push_back(piece_to_move);
+      }
+    }
+  }
+
+  // rook movements
+  for (int i = 0; i < BOARD_SIZE; i++)
+  {
+    if ((player->color == BLACK && board.black[ROOK][i] == 1) ||
+      (player->color == WHITE && board.white[ROOK][i] == 1))
+    {
+      PieceToMove piece_to_move;
+      piece_to_move.piece_moves = board.getRookMoves(player->color, i, attack);
+
+      // if the piece has possible moves
+      if (piece_to_move.piece_moves.count() > 0)
+      {
+        piece_to_move.piece_rank = getRank(i);
+        piece_to_move.piece_file = getFile(i);
+        piece_to_move.piece_type = "Rook";
+        movable_pieces.push_back(piece_to_move);
+      }
+    }
+  }
+
+  // bishop movements
+  for (int i = 0; i < BOARD_SIZE; i++)
+  {
+    if ((player->color == BLACK && board.black[BISHOP][i] == 1) ||
+      (player->color == WHITE && board.white[BISHOP][i] == 1))
+    {
+      PieceToMove piece_to_move;
+      piece_to_move.piece_moves = board.getBishopMoves(player->color, i, attack);
+
+      // if the piece has possible moves
+      if (piece_to_move.piece_moves.count() > 0)
+      {
+        piece_to_move.piece_rank = getRank(i);
+        piece_to_move.piece_file = getFile(i);
+        piece_to_move.piece_type = "Bishop";
+        movable_pieces.push_back(piece_to_move);
+      }
+    }
+  }
+
+  // knight movements
+  for (int i = 0; i < BOARD_SIZE; i++)
+  {
+    if ((player->color == BLACK && board.black[KNIGHT][i] == 1) ||
+      (player->color == WHITE && board.white[KNIGHT][i] == 1))
+    {
+      PieceToMove piece_to_move;
+      piece_to_move.piece_moves = board.getKnightMoves(player->color, i, attack);
+
+      // if the piece has possible moves
+      if (piece_to_move.piece_moves.count() > 0)
+      {
+        piece_to_move.piece_rank = getRank(i);
+        piece_to_move.piece_file = getFile(i);
+        piece_to_move.piece_type = "Knight";
+        movable_pieces.push_back(piece_to_move);
+      }
+    }
+  }
+
+  // pawn movements
+  for (int i = 0; i < BOARD_SIZE; i++)
+  {
+    if ((player->color == BLACK && board.black[PAWN][i] == 1) ||
+      (player->color == WHITE && board.white[PAWN][i] == 1))
+    {
+      PieceToMove piece_to_move;
+      piece_to_move.piece_moves = board.getPawnMoves(player->color, i, attack);
+
+      // if the piece has possible moves
+      if (piece_to_move.piece_moves.count() > 0)
+      {
+        piece_to_move.piece_rank = getRank(i);
+        piece_to_move.piece_file = getFile(i);
+        piece_to_move.piece_type = "Pawn";
+        movable_pieces.push_back(piece_to_move);
+      }
+    }
+  }
+
+  // // for all of my pieces
+  // for (auto piece : player->pieces)
+  // {
+  //   int i = getIndex(piece->rank, piece->file); // location of piece
+  //   PieceToMove piece_to_move;
+  //
+  //   if (piece->type == "King")
+  //   {
+  //     piece_to_move.piece_moves = board.getKingMoves(player->color, i, attack);
+  //
+  //     // check if castling possible
+  //     int left;
+  //     int right;
+  //
+  //     // king-side
+  //     // if the pieces haven't moved and the king isn't in check
+  //     if (!castle.king_moved && !castle.king_rook_moved && !isAttacked(attacked, king_location))
+  //     {
+  //       bool can_castle = true;
+  //
+  //       if (player->color == BLACK)
+  //         right = B_ROOK_RIGHT;
+  //       else
+  //         right = king_location + CASTLE;
+  //
+  //       // if squares between king and rook are attacked or blocked
+  //       for (int i = king_location + LEFT_RIGHT; i <= right; i++)
+  //       {
+  //         if (isAttacked(attacked, i) || board.all_pieces[i] == 1)
+  //           can_castle = false;
+  //       }
+  //
+  //       if (can_castle)
+  //         piece_to_move.piece_moves[king_location + CASTLE];
+  //     }
+  //
+  //     // queen-side
+  //     // if the pieces haven't moved and the king isn't in check
+  //     if (!castle.king_moved && !castle.queen_rook_moved && !isAttacked(attacked, king_location))
+  //     {
+  //       bool can_castle = true;
+  //
+  //       if (player->color == BLACK)
+  //         left = B_ROOK_LEFT + LEFT_RIGHT;
+  //       else
+  //         left = king_location - CASTLE;
+  //
+  //       // if squares between king and rook are attacked or blocked
+  //       for (int i = left; i < king_location; i++)
+  //       {
+  //         if (isAttacked(attacked, i) || board.all_pieces[i] == 1)
+  //           can_castle = false;
+  //       }
+  //
+  //       if (can_castle)
+  //         piece_to_move.piece_moves[king_location - CASTLE];
+  //     }
+  //   }
+  //   else if (piece->type == "Queen")
+  //     piece_to_move.piece_moves = board.getQueenMoves(player->color, i, attack);
+  //   else if (piece->type == "Rook")
+  //     piece_to_move.piece_moves = board.getRookMoves(player->color, i, attack);
+  //   else if (piece->type == "Bishop")
+  //     piece_to_move.piece_moves = board.getBishopMoves(player->color, i, attack);
+  //   else if (piece->type == "Knight")
+  //     piece_to_move.piece_moves = board.getKnightMoves(player->color, i, attack);
+  //   else // pawn
+  //   {
+  //     piece_to_move.piece_moves = board.getPawnMoves(player->color, i, attack);
+  //
+  //     if (can_en_passant)
+  //     {
+  //       int index;
+  //
+  //       // figure out which index is the en passant square
+  //       if (player->color == BLACK)
+  //       {
+  //         index = getIndex(last_move[1] - 1, last_move[0] + "");
+  //
+  //         if (attack.attacking_b_pawn[i][index] == 1)
+  //           piece_to_move.piece_moves[index] = 1;
+  //       }
+  //
+  //       // figure out which index is the en passant square
+  //       else // my color is white
+  //       {
+  //         index = getIndex(last_move[1] + 1, last_move[0] + "");
+  //
+  //         if (attack.attacking_w_pawn[i][index] == 1)
+  //           piece_to_move.piece_moves[index] = 1;
+  //       }
+  //     }
+  //   }
+  //
+  //   // if the piece has possible moves
+  //   if (piece_to_move.piece_moves.count() > 0)
+  //   {
+  //     piece_to_move.piece_rank = getRank(i);
+  //     piece_to_move.piece_file = getFile(i);
+  //     piece_to_move.piece_type = piece->type;
+  //     movable_pieces.push_back(piece_to_move);
+  //   }
+  // }
 
   return;
 }
 
 // this filters out all illegal moves from all movable pieces
-void AI::findMoves(const int king_location,
-  const vector<BasicPiece>& black, const vector<BasicPiece>& white,
+void AI::findMoves(const int king_location, const Chessboard& board,
   vector<PieceToMove>& moves, vector<State>& states)
 {
+  // need to look at moves of my own prediction, not just actually completed moves
   bool near_draw = drawSetup();
 
   // for all movable pieces
@@ -435,8 +598,87 @@ void AI::findMoves(const int king_location,
       {
         // create a new state and move piece i to square new_index
         State state;
-        vector<BasicPiece> new_black = black;
-        vector<BasicPiece> new_white = white;
+        vector<BasicPiece> new_black;
+        vector<BasicPiece> new_white;
+
+        // find all pieces on the bitboard
+        for (int i = 0; i < BOARD_SIZE; i++)
+        {
+          BasicPiece piece;
+          piece.index = i;
+
+          if (board.black[KING][i] == 1)
+          {
+            piece.type = "King";
+            new_black.push_back(piece);
+          }
+
+          else if (board.black[QUEEN][i] == 1)
+          {
+            piece.type = "Queen";
+            new_black.push_back(piece);
+          }
+
+          else if (board.black[ROOK][i] == 1)
+          {
+            piece.type = "Rook";
+            new_black.push_back(piece);
+          }
+
+          else if (board.black[BISHOP][i] == 1)
+          {
+            piece.type = "Bishop";
+            new_black.push_back(piece);
+          }
+
+          else if (board.black[KNIGHT][i] == 1)
+          {
+            piece.type = "Knight";
+            new_black.push_back(piece);
+          }
+
+          else if (board.black[PAWN][i] == 1)
+          {
+            piece.type = "Pawn";
+            new_black.push_back(piece);
+          }
+
+          else if (board.white[KING][i] == 1)
+          {
+            piece.type = "King";
+            new_white.push_back(piece);
+          }
+
+          else if (board.white[QUEEN][i] == 1)
+          {
+            piece.type = "Queen";
+            new_white.push_back(piece);
+          }
+
+          else if (board.white[ROOK][i] == 1)
+          {
+            piece.type = "Rook";
+            new_white.push_back(piece);
+          }
+
+          else if (board.white[BISHOP][i] == 1)
+          {
+            piece.type = "Bishop";
+            new_white.push_back(piece);
+          }
+
+          else if (board.white[KNIGHT][i] == 1)
+          {
+            piece.type = "Knight";
+            new_white.push_back(piece);
+          }
+
+          else if (board.white[PAWN][i] == 1)
+          {
+            piece.type = "Pawn";
+            new_white.push_back(piece);
+          }
+        }
 
         if (player->color == BLACK)
         {

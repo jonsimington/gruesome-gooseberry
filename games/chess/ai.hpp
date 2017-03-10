@@ -89,8 +89,7 @@ public:
     void findMovablePieces(vector<PieceToMove>& movable_pieces,
       Chessboard& board, const bitset<BOARD_SIZE>& attacked, const int king_location,
       const string last_move, const bool can_en_passant);
-    void findMoves(const int king_location,
-      const vector<BasicPiece>& black, const vector<BasicPiece>& white,
+    void findMoves(const int king_location, const Chessboard& board,
       vector<PieceToMove>& moves, vector<State>& states);
     State minimax(vector<State>& states, string max_min);
     // PieceToMove getRandomPiece(const int random,
