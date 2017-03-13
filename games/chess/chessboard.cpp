@@ -234,11 +234,11 @@ int Chessboard::getUtility(const string color, const AttackPiece& attack)
   }
 
   // bonus for what I attack
-  utility += (my_attacks & their_side[QUEEN]).count() * QUEEN_VALUE;
-  utility += (my_attacks & their_side[ROOK]).count() * ROOK_VALUE;
-  utility += (my_attacks & their_side[BISHOP]).count() * BISHOP_VALUE;
-  utility += (my_attacks & their_side[KNIGHT]).count() * KNIGHT_VALUE;
-  utility += (my_attacks & their_side[PAWN]).count() * PAWN_VALUE;
+  utility += (my_attacks & their_side[QUEEN]).count() * QUEEN_VALUE / 2;
+  utility += (my_attacks & their_side[ROOK]).count() * ROOK_VALUE / 2;
+  utility += (my_attacks & their_side[BISHOP]).count() * BISHOP_VALUE / 2;
+  utility += (my_attacks & their_side[KNIGHT]).count() * KNIGHT_VALUE / 2;
+  utility += (my_attacks & their_side[PAWN]).count() * PAWN_VALUE / 2;
 
   // penalty for what they attack
   utility -= (their_attacks & my_side[QUEEN]).count() * QUEEN_VALUE;
@@ -248,8 +248,8 @@ int Chessboard::getUtility(const string color, const AttackPiece& attack)
   utility -= (their_attacks & my_side[PAWN]).count() * PAWN_VALUE;
 
   // // if it checks the king
-  // utility += (my_attacks & their_side[KING]).count() * KING_VALUE;
-  // utility -= (their_attacks & my_side[KING]).count() * KING_VALUE * KING_VALUE;
+  utility += (my_attacks & their_side[KING]).count() * KING_VALUE / 2;
+  utility -= (their_attacks & my_side[KING]).count() * KING_VALUE;
 
   // all of my pieces
   utility += my_side[QUEEN].count() * QUEEN_VALUE;
@@ -327,186 +327,8 @@ bitset<BOARD_SIZE> Chessboard::getKingMoves(const string color, const int i, con
 // returns all valid queen moves given the current location of all pieces
 bitset<BOARD_SIZE> Chessboard::getQueenMoves(const string color, const int i, const AttackPiece& a)
 {
-  bitset<BOARD_SIZE> my_side;
-  bitset<BOARD_SIZE> valid_moves;
-  int slider; // moves along the entire straight line the piece can move
-
-  if (color == BLACK) // black
-    my_side = b_pieces;
-  else // white
-    my_side = w_pieces;
-
-  valid_moves = a.attacking_queen[i] & ~my_side;
-
-  // all moves N
-  slider = i + HEIGHT_WIDTH;
-  while (slider < BOARD_SIZE)
-  {
-    // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
-    {
-      // clear all "valid" moves that exist after the invalid/blocked square
-      slider += HEIGHT_WIDTH;
-      while (slider < BOARD_SIZE)
-      {
-        valid_moves[slider] = 0;
-        slider += HEIGHT_WIDTH;
-      }
-
-      break;
-    }
-
-    slider += HEIGHT_WIDTH;
-  }
-
-  // all moves S
-  slider = i - HEIGHT_WIDTH;
-  while (slider >= 0)
-  {
-    // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
-    {
-      // clear all "valid" moves that exist after the invalid/blocked square
-      slider -= HEIGHT_WIDTH;
-      while (slider >= 0)
-      {
-        valid_moves[slider] = 0;
-        slider -= HEIGHT_WIDTH;
-      }
-
-      break;
-    }
-
-    slider -= HEIGHT_WIDTH;
-  }
-
-  // all moves E
-  slider = i + LEFT_RIGHT;
-  while ((slider % HEIGHT_WIDTH != 0) && (slider < BOARD_SIZE))
-  {
-    // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
-    {
-      // clear all "valid" moves that exist after the invalid/blocked square
-      slider += LEFT_RIGHT;
-      while ((slider % HEIGHT_WIDTH != 0) && (slider < BOARD_SIZE))
-      {
-        valid_moves[slider] = 0;
-        slider += LEFT_RIGHT;
-      }
-
-      break;
-    }
-
-    slider += LEFT_RIGHT;
-  }
-
-  // all moves W
-  slider = i - LEFT_RIGHT;
-  while ((slider % HEIGHT_WIDTH != RIGHT_EDGE) && (slider >= 0))
-  {
-    // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
-    {
-      // clear all "valid" moves that exist after the invalid/blocked square
-      slider -= LEFT_RIGHT;
-      while ((slider % HEIGHT_WIDTH != RIGHT_EDGE) && (slider >= 0))
-      {
-        valid_moves[slider] = 0;
-        slider -= LEFT_RIGHT;
-      }
-
-      break;
-    }
-
-    slider -= LEFT_RIGHT;
-  }
-
-  // all moves NE
-  slider = i + NE_SW_DIAGONAL;
-  while ((slider < BOARD_SIZE) && (slider % HEIGHT_WIDTH != 0))
-  {
-    // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
-    {
-      // clear all "valid" moves that exist after the invalid/blocked square
-      slider += NE_SW_DIAGONAL;
-      while ((slider < BOARD_SIZE) && (slider % HEIGHT_WIDTH != 0))
-      {
-        valid_moves[slider] = 0;
-        slider += NE_SW_DIAGONAL;
-      }
-
-      break;
-    }
-
-    slider += NE_SW_DIAGONAL;
-  }
-
-  // all moves SE
-  slider = i - NW_SE_DIAGONAL;
-  while ((slider >= 0) && (slider % HEIGHT_WIDTH != 0))
-  {
-    // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
-    {
-      // clear all "valid" moves that exist after the invalid/blocked square
-      slider -= NW_SE_DIAGONAL;
-      while ((slider >= 0) && (slider % HEIGHT_WIDTH != 0))
-      {
-        valid_moves[slider] = 0;
-        slider -= NW_SE_DIAGONAL;
-      }
-
-      break;
-    }
-
-    slider -= NW_SE_DIAGONAL;
-  }
-
-  // all moves NW
-  slider = i + NW_SE_DIAGONAL;
-  while ((slider < BOARD_SIZE) && (slider % HEIGHT_WIDTH != RIGHT_EDGE))
-  {
-    // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
-    {
-      // clear all "valid" moves that exist after the invalid/blocked square
-      slider += NW_SE_DIAGONAL;
-      while ((slider < BOARD_SIZE) && (slider % HEIGHT_WIDTH != RIGHT_EDGE))
-      {
-        valid_moves[slider] = 0;
-        slider += NW_SE_DIAGONAL;
-      }
-
-      break;
-    }
-
-    slider += NW_SE_DIAGONAL;
-  }
-
-  // all moves SW
-  slider = i - NE_SW_DIAGONAL;
-  while ((slider >= 0) && (slider % HEIGHT_WIDTH != RIGHT_EDGE))
-  {
-    // if it finds an invalid move or a piece occupies a square on the path
-    if (valid_moves[slider] == 0 || all_pieces[slider] == 1)
-    {
-      // clear all "valid" moves that exist after the invalid/blocked square
-      slider -= NE_SW_DIAGONAL;
-      while ((slider >= 0) && (slider % HEIGHT_WIDTH != RIGHT_EDGE))
-      {
-        valid_moves[slider] = 0;
-        slider -= NE_SW_DIAGONAL;
-      }
-
-      break;
-    }
-
-    slider -= NE_SW_DIAGONAL;
-  }
-
-  return valid_moves;
+  // return valid_moves;
+  return getRookMoves(color, i, a) | getBishopMoves(color, i, a);
 }
 
 // returns all valid rook moves given the current location of all pieces

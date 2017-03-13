@@ -83,17 +83,17 @@ public:
 
     // my functions
     void initializeCastling();
-    bool initializeEnPassant(string& last_move);
+    bool initializeEnPassant();
     int getKingLocation(const vector<BasicPiece>& pieces);
     void findPieces(vector<BasicPiece>& black_pieces, vector<BasicPiece>& white_pieces);
     void findMovablePieces(vector<PieceToMove>& movable_pieces,
-      Chessboard& board, const bitset<BOARD_SIZE>& attacked, const int king_location,
-      const string last_move, const bool can_en_passant);
+      Chessboard& board, const bitset<BOARD_SIZE>& attacked,
+      const int king_location, const int en_passant_square);
     void findMoves(const int king_location, const Chessboard& board,
       vector<PieceToMove>& moves, vector<State>& states);
-    State minimax(vector<State>& states, string max_min);
-    // PieceToMove getRandomPiece(const int random,
-    //   const vector<PieceToMove>& moves, const vector<State>& states);
+    State minimax(vector<State>& states, const int depth, const int alpha, const int beta);
+    int maxValue(State&states, const int depth,
+      const int alpha, const int beta, string max_min);
     void updateCastlingAbility(const int current_index);//const State& state);
     bool drawSetup();
     void makeMove(const int old_index, const int new_index);//, bitset<BOARD_SIZE> moves);

@@ -84,8 +84,15 @@ bool AI::run_turn()
   vector<State> possible_states;
 
   // check if en passant is possible
-  string last_move;
-  bool can_en_passant = initializeEnPassant(last_move);
+  bool can_en_passant = initializeEnPassant();
+  int en_passant_square = -1;
+
+  if (can_en_passant)
+  {
+    int current_index = getIndex(game->moves[game->moves.size() - 1]->from_rank,
+      game->moves[game->moves.size() - 1]->from_file);
+    en_passant_square = current_index + HEIGHT_WIDTH * (player->color == BLACK ? 1 : -1);
+  }
 
   // get the current location of the king
   int king_location = getKingLocation((player->color == BLACK ? black_pieces : white_pieces));
@@ -98,13 +105,13 @@ bool AI::run_turn()
   }
 
   // find all movable pieces and their possible moves (don't worry about check)
-  findMovablePieces(movable_pieces, board, attacked, king_location, last_move, can_en_passant);
+  findMovablePieces(movable_pieces, board, attacked, king_location, en_passant_square);
 
   // for all movable pieces, find valid moves
   findMoves(king_location, board, movable_pieces, possible_states);
 
   // find the best move
-  State best_move = minimax(possible_states, MAX);
+  State best_move = minimax(possible_states, 2, -1000, 1000);
   cout << "MAX: " << best_move.utility << endl;
 
   // update castling
@@ -112,7 +119,6 @@ bool AI::run_turn()
 
   // send the move to the game server
   makeMove(best_move.current_index, best_move.new_index);
-
   cout << "Time Remaining: " << player->time_remaining << " ns" << endl;
 
   return true; // to signify we are done with our turn.
@@ -236,14 +242,14 @@ void AI::initializeCastling()
 }
 
 // this returns true if en passant is possible; returns false otherwise
-bool AI::initializeEnPassant(string& last_move)
+bool AI::initializeEnPassant()
 {
   bool can_en_passant = false;
 
   // if the opponent moved before this turn
   if (game->moves.size() > 0)
   {
-    last_move = game->moves[game->moves.size() - 1]->san;
+    string last_move = game->moves[game->moves.size() - 1]->san;
 
     // if the opponent just moved a pawn
     if (last_move.size() == PAWN_NOTATION)
@@ -300,8 +306,8 @@ void AI::findPieces(vector<BasicPiece>& black_pieces, vector<BasicPiece>& white_
 
 // this identfies all pieces with at least one pseudo-legal move
 void AI::findMovablePieces(vector<PieceToMove>& movable_pieces,
-  Chessboard& board, const bitset<BOARD_SIZE>& attacked, const int king_location,
-  const string last_move, const bool can_en_passant)
+  Chessboard& board, const bitset<BOARD_SIZE>& attacked,
+  const int king_location, const int en_passant_square)
 {
   // king movements
   {
@@ -455,6 +461,16 @@ void AI::findMovablePieces(vector<PieceToMove>& movable_pieces,
       PieceToMove piece_to_move;
       piece_to_move.piece_moves = board.getPawnMoves(player->color, i, attack);
 
+      // en passant
+      if (en_passant_square != -1)
+      {
+        if ((player->color == BLACK && attack.attacking_b_pawn[i][en_passant_square] == 1) ||
+          (player->color == WHITE && attack.attacking_w_pawn[i][en_passant_square] == 1))
+        {
+          piece_to_move.piece_moves[en_passant_square] = 1;
+        }
+      }
+
       // if the piece has possible moves
       if (piece_to_move.piece_moves.count() > 0)
       {
@@ -465,110 +481,6 @@ void AI::findMovablePieces(vector<PieceToMove>& movable_pieces,
       }
     }
   }
-
-  // // for all of my pieces
-  // for (auto piece : player->pieces)
-  // {
-  //   int i = getIndex(piece->rank, piece->file); // location of piece
-  //   PieceToMove piece_to_move;
-  //
-  //   if (piece->type == "King")
-  //   {
-  //     piece_to_move.piece_moves = board.getKingMoves(player->color, i, attack);
-  //
-  //     // check if castling possible
-  //     int left;
-  //     int right;
-  //
-  //     // king-side
-  //     // if the pieces haven't moved and the king isn't in check
-  //     if (!castle.king_moved && !castle.king_rook_moved && !isAttacked(attacked, king_location))
-  //     {
-  //       bool can_castle = true;
-  //
-  //       if (player->color == BLACK)
-  //         right = B_ROOK_RIGHT;
-  //       else
-  //         right = king_location + CASTLE;
-  //
-  //       // if squares between king and rook are attacked or blocked
-  //       for (int i = king_location + LEFT_RIGHT; i <= right; i++)
-  //       {
-  //         if (isAttacked(attacked, i) || board.all_pieces[i] == 1)
-  //           can_castle = false;
-  //       }
-  //
-  //       if (can_castle)
-  //         piece_to_move.piece_moves[king_location + CASTLE];
-  //     }
-  //
-  //     // queen-side
-  //     // if the pieces haven't moved and the king isn't in check
-  //     if (!castle.king_moved && !castle.queen_rook_moved && !isAttacked(attacked, king_location))
-  //     {
-  //       bool can_castle = true;
-  //
-  //       if (player->color == BLACK)
-  //         left = B_ROOK_LEFT + LEFT_RIGHT;
-  //       else
-  //         left = king_location - CASTLE;
-  //
-  //       // if squares between king and rook are attacked or blocked
-  //       for (int i = left; i < king_location; i++)
-  //       {
-  //         if (isAttacked(attacked, i) || board.all_pieces[i] == 1)
-  //           can_castle = false;
-  //       }
-  //
-  //       if (can_castle)
-  //         piece_to_move.piece_moves[king_location - CASTLE];
-  //     }
-  //   }
-  //   else if (piece->type == "Queen")
-  //     piece_to_move.piece_moves = board.getQueenMoves(player->color, i, attack);
-  //   else if (piece->type == "Rook")
-  //     piece_to_move.piece_moves = board.getRookMoves(player->color, i, attack);
-  //   else if (piece->type == "Bishop")
-  //     piece_to_move.piece_moves = board.getBishopMoves(player->color, i, attack);
-  //   else if (piece->type == "Knight")
-  //     piece_to_move.piece_moves = board.getKnightMoves(player->color, i, attack);
-  //   else // pawn
-  //   {
-  //     piece_to_move.piece_moves = board.getPawnMoves(player->color, i, attack);
-  //
-  //     if (can_en_passant)
-  //     {
-  //       int index;
-  //
-  //       // figure out which index is the en passant square
-  //       if (player->color == BLACK)
-  //       {
-  //         index = getIndex(last_move[1] - 1, last_move[0] + "");
-  //
-  //         if (attack.attacking_b_pawn[i][index] == 1)
-  //           piece_to_move.piece_moves[index] = 1;
-  //       }
-  //
-  //       // figure out which index is the en passant square
-  //       else // my color is white
-  //       {
-  //         index = getIndex(last_move[1] + 1, last_move[0] + "");
-  //
-  //         if (attack.attacking_w_pawn[i][index] == 1)
-  //           piece_to_move.piece_moves[index] = 1;
-  //       }
-  //     }
-  //   }
-  //
-  //   // if the piece has possible moves
-  //   if (piece_to_move.piece_moves.count() > 0)
-  //   {
-  //     piece_to_move.piece_rank = getRank(i);
-  //     piece_to_move.piece_file = getFile(i);
-  //     piece_to_move.piece_type = piece->type;
-  //     movable_pieces.push_back(piece_to_move);
-  //   }
-  // }
 
   return;
 }
@@ -704,7 +616,7 @@ void AI::findMoves(const int king_location, const Chessboard& board,
           for (int del = 0; del < new_white.size(); del++)
           {
             if (new_white[del].index == new_index)
-              new_white[del].type = '\0';
+              new_white[del].index = -1;
           }
         }
 
@@ -732,7 +644,7 @@ void AI::findMoves(const int king_location, const Chessboard& board,
           for (int del = 0; del < new_black.size(); del++)
           {
             if (new_black[del].index == new_index)
-              new_black[del].type = '\0';
+              new_black[del].index = -1;
           }
         }
 
@@ -846,56 +758,81 @@ bool AI::drawSetup()
 }
 
 // this will use IDDLMM to pick which move to make
-State AI::minimax(vector<State>& states, string max_min)
+State AI::minimax(vector<State>& states, const int depth, const int alpha, const int beta)
 {
   State best_move = states[0];
   int best_utility;
 
   // initialize utility outside the realm of possibility
-  if (max_min == MAX)
-    best_utility = (MAX_POINTS * -1) - 1; // below possible range
-  else // MIN player
-    best_utility = MAX_POINTS + 1; // above possible range
+  best_utility = (MAX_POINTS * -1) - 1; // below possible range
 
   for (auto state : states)
   {
-    state.utility = state.board.getUtility(player->color, attack);
+    state.utility = maxValue(state, depth - 1, alpha, beta, "Max");
 
-    // // favor moving stronger pieces
-    // if (state.type == "Queen")
-    //   state.utility += QUEEN_VALUE;
-    // else if (state.type == "Rook")
-    //   state.utility += ROOK_VALUE;
-    // else if (state.type == "Bishop")
-    //   state.utility += BISHOP_VALUE;
-    // else if (state.type == "Knight")
-    //   state.utility += KNIGHT_VALUE;
-    // else if (state.type == "Pawn")
-    //   state.utility += PAWN_VALUE;
-
-    // MAX
-    if (max_min == MAX)
+    // update best move
+    if (state.utility > best_utility)
     {
-      if (state.utility > best_utility)
-      {
-        best_utility = state.utility;
-        best_move = state;
-      }
-    }
-
-    // MIN
-    else // player is white
-    {
-      if (state.utility < best_utility)
-      {
-        best_utility = state.utility;
-        best_move = state;
-      }
+      best_utility = state.utility;
+      best_move = state;
     }
   }
 
   best_move.utility = best_utility;
   return best_move;
+}
+
+// returns the maximum predicted utility
+int AI::maxValue(State& state, const int depth,
+  const int alpha, const int beta, string max_min)
+{
+  int utility;
+
+  if (depth == 0)
+    return state.board.getUtility(player->color, attack);
+
+  // generate new moves
+  vector<PieceToMove> movable_pieces;
+  vector<State> possible_states;
+  bitset<BOARD_SIZE> attacked = getAttacked(player->opponent->color, state.board, attack);
+
+  // get king location
+  int king_location;
+  for (int i = 0; i < BOARD_SIZE; i++)
+  {
+    if ((player->color == BLACK && state.board.black[KING][i] == 1) ||
+      (player->color == WHITE && state.board.white[KING][i] == 1))
+    {
+      king_location = i;
+      break;
+    }
+  }
+
+  // check if en passant possible
+  bool can_en_passant = false;
+  int en_passant_square = -1;
+  if (state.type == "Pawn")
+  {
+    // if pawn moved two ranks
+    if (abs(state.current_index - state.new_index) == (HEIGHT_WIDTH + HEIGHT_WIDTH))
+      can_en_passant = true;
+  }
+
+  if (can_en_passant)
+    en_passant_square = state.current_index + HEIGHT_WIDTH * (player->color == BLACK ? 1 : -1);
+
+  // find all movable pieces and their possible moves (don't worry about check)
+  findMovablePieces(movable_pieces, state.board, attacked, king_location, en_passant_square);
+
+  // for all movable pieces, find valid moves
+  findMoves(king_location, state.board, movable_pieces, possible_states);
+
+  // generate new states FOR THE OPPONENT
+  // minvalue
+
+
+
+  return utility;
 }
 
 // if the last piece moved affects castling ability, update variables
@@ -944,30 +881,10 @@ void AI::makeMove(const int old_index, const int new_index)
   {
     // if piece is the one we intend to move
     if (piece->file == from_file && piece->rank == from_rank)
-    // {
+    {
       piece->move(to_file, to_rank, "Queen");
-      // cout << piece->type << " on " << from_file << from_rank << " can move to:" << endl;
-      //
-      // // output all completely valid moves
-      // for (int i = 0; i < moves.size(); i++)
-      // {
-      //   if (moves[i] == 1)
-      //     cout << "\t" << getFile(i) << getRank(i) << endl;
-      // }
-
-      // // promote to random type
-      // int random_type = rand() % PROMOTE_TYPES;
-      //
-      // if (random_type == 0)
-      //   piece->move(to_file, to_rank, "Queen");
-      // else if (random_type == 1)
-      //   piece->move(to_file, to_rank, "Rook");
-      // else if (random_type == 2)
-      //   piece->move(to_file, to_rank, "Bishop");
-      // else if (random_type == 3)
-      //   piece->move(to_file, to_rank, "Knight");
-      // break;
-    // }
+      break;
+    }
   }
 
   return;
