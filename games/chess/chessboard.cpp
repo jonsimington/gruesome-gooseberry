@@ -241,15 +241,15 @@ int Chessboard::getUtility(const string color, const AttackPiece& attack)
   utility += (my_attacks & their_side[PAWN]).count() * PAWN_VALUE / 2;
 
   // penalty for what they attack
-  utility -= (their_attacks & my_side[QUEEN]).count() * QUEEN_VALUE;
-  utility -= (their_attacks & my_side[ROOK]).count() * ROOK_VALUE;
-  utility -= (their_attacks & my_side[BISHOP]).count() * BISHOP_VALUE;
-  utility -= (their_attacks & my_side[KNIGHT]).count() * KNIGHT_VALUE;
-  utility -= (their_attacks & my_side[PAWN]).count() * PAWN_VALUE;
+  utility -= (their_attacks & my_side[QUEEN]).count() * QUEEN_VALUE / 2;
+  utility -= (their_attacks & my_side[ROOK]).count() * ROOK_VALUE / 2;
+  utility -= (their_attacks & my_side[BISHOP]).count() * BISHOP_VALUE / 2;
+  utility -= (their_attacks & my_side[KNIGHT]).count() * KNIGHT_VALUE / 2;
+  utility -= (their_attacks & my_side[PAWN]).count() * PAWN_VALUE / 2;
 
   // // if it checks the king
   utility += (my_attacks & their_side[KING]).count() * KING_VALUE / 2;
-  utility -= (their_attacks & my_side[KING]).count() * KING_VALUE;
+  utility -= (their_attacks & my_side[KING]).count() * KING_VALUE * 3;
 
   // all of my pieces
   utility += my_side[QUEEN].count() * QUEEN_VALUE;

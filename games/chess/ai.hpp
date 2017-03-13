@@ -84,16 +84,16 @@ public:
     // my functions
     void initializeCastling();
     bool initializeEnPassant();
-    int getKingLocation(const vector<BasicPiece>& pieces);
-    void findPieces(vector<BasicPiece>& black_pieces, vector<BasicPiece>& white_pieces);
-    void findMovablePieces(vector<PieceToMove>& movable_pieces,
+    int initializeKingLocation(const vector<BasicPiece>& pieces);
+    void initializePieces(vector<BasicPiece>& black_pieces, vector<BasicPiece>& white_pieces);
+    void findMovablePieces(const string color, vector<PieceToMove>& movable_pieces,
       Chessboard& board, const bitset<BOARD_SIZE>& attacked,
       const int king_location, const int en_passant_square);
-    void findMoves(const int king_location, const Chessboard& board,
+    void findMoves(const string color, const int king_location, const Chessboard& board,
       vector<PieceToMove>& moves, vector<State>& states);
-    State minimax(vector<State>& states, const int depth, const int alpha, const int beta);
-    int maxValue(State&states, const int depth,
-      const int alpha, const int beta, string max_min);
+    State minimax(vector<State>& states, const int depth);
+    int maxValue(State& state, const int depth);
+    int minValue(State& state, const int depth);
     void updateCastlingAbility(const int current_index);//const State& state);
     bool drawSetup();
     void makeMove(const int old_index, const int new_index);//, bitset<BOARD_SIZE> moves);

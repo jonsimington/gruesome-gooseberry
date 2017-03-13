@@ -10,8 +10,7 @@
 using namespace std;
 
 // general game-wide constants
-const int MAX_POINTS = 103; // one side has 9 Q, 1 K, and 2 each of B, R, N
-                            // and the other side only has a king
+const int MAX_POINTS = 1000;
 const int DRAW_MOVES = 7; // 7 moves must occur before the next move can cause draw
 const int DRAW_SHIFT = 4; // draw checks moves separated by 3 other moves for equivalence
 const int NUM_TYPES = 6; // king, queen, rook, bishop, knight, pawn
