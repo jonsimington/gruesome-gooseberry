@@ -112,7 +112,8 @@ bool AI::run_turn()
   findMoves(player->color, king_location, board, movable_pieces, possible_states);
 
   // find the best move
-  State best_move = minimax(possible_states, 4);
+  const int MAX_DEPTH = 4;
+  State best_move = minimax(possible_states, MAX_DEPTH);
   cout << "MAX: " << best_move.utility << endl;
 
   // update castling
