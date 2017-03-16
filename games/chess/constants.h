@@ -10,7 +10,8 @@
 using namespace std;
 
 // general game-wide constants
-const int MAX_DEPTH = 7;
+const int CHECKMATE = 1000000;
+const int MAX_DEPTH = 6;
 const int MAX_POINTS = 1000;
 const int DRAW_MOVES = 7; // 7 moves must occur before the next move can cause draw
 const int DRAW_SHIFT = 4; // draw checks moves separated by 3 other moves for equivalence

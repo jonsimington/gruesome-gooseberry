@@ -66,6 +66,7 @@ struct PieceToMove
 struct State
 {
   Chessboard board;
+  bool checkmate;
   string type;
   int current_index;
   int new_index;

@@ -111,10 +111,17 @@ bool AI::run_turn()
   // for all movable pieces, find valid moves
   findMoves(player->color, king_location, board, movable_pieces, possible_states);
 
-  // find the best move
-  const int MAX_DEPTH = 4;
-  State best_move = minimax(possible_states, MAX_DEPTH);
-  cout << "MAX: " << best_move.utility << endl;
+  State best_move;
+
+  // find the best move with iterative deepening
+  for (int i = 0; i < MAX_DEPTH; i++)
+  {
+    best_move = minimax(possible_states, MAX_DEPTH);
+    cout << "MAX: " << best_move.utility << endl;
+
+    if (best_move.checkmate)
+      break;
+  }
 
   // update castling
   updateCastlingAbility(best_move.current_index);
@@ -685,6 +692,7 @@ void AI::findMoves(const string color, const int king_location, const Chessboard
         // if this move doesn't lead to a simplified draw
         if (!isAttacked(attacked, location) && !will_draw)
         {
+          state.checkmate = false;
           state.current_index = current_index;
           state.new_index = new_index;
           states.push_back(state);
@@ -780,10 +788,18 @@ State AI::minimax(vector<State>& states, const int depth)
     {
       best_utility = state.utility;
       best_move = state;
+
+      // still outside the realm of possibility
+      if (best_utility > CHECKMATE / 2)
+      {
+        best_move.checkmate = true;
+        break;
+      }
     }
   }
 
   best_move.utility = best_utility;
+
   return best_move;
 }
 
@@ -830,6 +846,13 @@ int AI::maxValue(State& state, const int depth)
 
   // for all movable pieces, find valid moves
   findMoves(player->color, king_location, state.board, movable_pieces, possible_states);
+
+  // if my king has no valid moves and it's checked
+  if (state.board.getKingMoves(player->color, king_location, attack).count() == 0 &&
+    isAttacked(attacked, king_location))
+  {
+    return CHECKMATE * -1;
+  }
 
   // initialize utility outside the realm of possibility
   int best_utility = MAX_POINTS * -1; // below possible range
@@ -888,6 +911,13 @@ int AI::minValue(State& state, const int depth)
 
   // for all movable pieces, find valid moves
   findMoves(player->opponent->color, king_location, state.board, movable_pieces, possible_states);
+
+  // if their king has no valid moves and it's checked
+  if (state.board.getKingMoves(player->opponent->color, king_location, attack).count() == 0 &&
+    isAttacked(attacked, king_location))
+  {
+    return CHECKMATE;
+  }
 
   // initialize utility outside the realm of possibility
   int best_utility = MAX_POINTS; // above possible range
