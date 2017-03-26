@@ -14,6 +14,7 @@
 // You can add additional #includes here
 #include "attack_piece.h"
 #include "chessboard.h"
+#include <chrono>
 #include <iostream>
 using namespace std;
 
@@ -92,8 +93,8 @@ public:
     void findMoves(const string color, const int king_location, const Chessboard& board,
       vector<PieceToMove>& moves, vector<State>& states);
     State minimax(vector<State>& states, const int depth);
-    int maxValue(State& state, const int depth);
-    int minValue(State& state, const int depth);
+    int maxValue(State& state, const int depth, int alpha, int beta);
+    int minValue(State& state, const int depth, int alpha, int beta);
     void updateCastlingAbility(const int current_index);//const State& state);
     bool drawSetup();
     void makeMove(const int old_index, const int new_index);//, bitset<BOARD_SIZE> moves);

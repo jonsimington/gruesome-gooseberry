@@ -10,9 +10,10 @@
 using namespace std;
 
 // general game-wide constants
-const int CHECKMATE = 1000000;
-const int MAX_DEPTH = 3;
-const int MAX_POINTS = 1000;
+const long int TIME = 6000000000; // 9 seconds = 15 min / 100 moves
+const int INFINITY = 2147483647; // absolute value of initial alpha & beta
+const int CHECKMATE = 1000000; // value of board state where checkmate occurs
+const int MAX_POINTS = 1000; // initialize starting utility outside realm of possiblity
 const int DRAW_MOVES = 7; // 7 moves must occur before the next move can cause draw
 const int DRAW_SHIFT = 4; // draw checks moves separated by 3 other moves for equivalence
 const int NUM_TYPES = 6; // king, queen, rook, bishop, knight, pawn

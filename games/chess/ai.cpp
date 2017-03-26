@@ -114,13 +114,25 @@ bool AI::run_turn()
   State best_move;
 
   // find the best move with iterative deepening
-  for (int i = 0; i < MAX_DEPTH; i++)
+  // maximum of TIME seconds per move
+  int depth = 1;
+  auto start = chrono::system_clock::now();
+
+  while (true)
   {
-    best_move = minimax(possible_states, MAX_DEPTH);
+    best_move = minimax(possible_states, depth);
     cout << "MAX: " << best_move.utility << endl;
 
-    if (best_move.checkmate)
+    auto duration = chrono::duration_cast<chrono::nanoseconds>(chrono::system_clock::now() - start);
+    cout << (duration).count() << endl;
+
+    // if we found checkmate or we've spent too long thinking
+    if (best_move.checkmate || duration > chrono::nanoseconds(TIME))
+    {
       break;
+    }
+
+    depth++;
   }
 
   // update castling
@@ -775,13 +787,15 @@ State AI::minimax(vector<State>& states, const int depth)
 {
   State best_move = states[0];
   int best_utility;
+  int alpha = INFINITY * -1;
+  int beta = INFINITY;
 
   // initialize utility outside the realm of possibility
   best_utility = MAX_POINTS * -1; // below possible range
 
   for (auto state : states)
   {
-    state.utility = minValue(state, depth - 1);
+    state.utility = minValue(state, depth - 1, alpha, beta);
 
     // update best move
     if (state.utility > best_utility)
@@ -796,15 +810,25 @@ State AI::minimax(vector<State>& states, const int depth)
         break;
       }
     }
+
+    // update alpha
+    if (state.utility > alpha)
+      alpha = state.utility;
+
+    // prune
+    if (state.utility >= beta)
+    {
+      best_move.utility = best_utility;
+      return best_move;
+    }
   }
 
   best_move.utility = best_utility;
-
   return best_move;
 }
 
 // returns the maximum predicted utility
-int AI::maxValue(State& state, const int depth)
+int AI::maxValue(State& state, const int depth, int alpha, int beta)
 {
   if (depth == 0)
     return state.board.getUtility(player->color, attack);
@@ -859,17 +883,25 @@ int AI::maxValue(State& state, const int depth)
 
   for (auto state : possible_states)
   {
-    int utility = minValue(state, depth - 1);
+    int utility = minValue(state, depth - 1, alpha, beta);
 
     // update best move
     if (utility > best_utility)
       best_utility = utility;
+
+    // update alpha
+    if (state.utility > alpha)
+      alpha = state.utility;
+
+    // prune
+    if (state.utility >= beta)
+      return best_utility;
   }
 
   return best_utility;
 }
 
-int AI::minValue(State& state, const int depth)
+int AI::minValue(State& state, const int depth, int alpha, int beta)
 {
   if (depth == 0)
     return state.board.getUtility(player->opponent->color, attack) * -1;
@@ -924,11 +956,19 @@ int AI::minValue(State& state, const int depth)
 
   for (auto state : possible_states)
   {
-    int utility = maxValue(state, depth - 1);
+    int utility = maxValue(state, depth - 1, alpha, beta);
 
     // update best move
     if (utility < best_utility)
       best_utility = utility;
+
+    // update beta
+    if (state.utility < beta)
+      beta = state.utility;
+
+    // prune
+    if (state.utility <= alpha)
+      return best_utility;
   }
 
   return best_utility;
