@@ -124,7 +124,6 @@ bool AI::run_turn()
     cout << "MAX: " << best_move.utility << endl;
 
     auto duration = chrono::duration_cast<chrono::nanoseconds>(chrono::system_clock::now() - start);
-    cout << (duration).count() << endl;
 
     // if we found checkmate or we've spent too long thinking
     if (best_move.checkmate || duration > chrono::nanoseconds(TIME))
@@ -795,7 +794,7 @@ State AI::minimax(vector<State>& states, const int depth)
 
   for (auto state : states)
   {
-    state.utility = minValue(state, depth - 1, alpha, beta);
+    state.utility = minimaxValue(state, depth - 1, alpha, beta, true);
 
     // update best move
     if (state.utility > best_utility)
@@ -827,23 +826,31 @@ State AI::minimax(vector<State>& states, const int depth)
   return best_move;
 }
 
-// returns the maximum predicted utility
-int AI::maxValue(State& state, const int depth, int alpha, int beta)
+// returns the max utility if max == true; min utility otherwise
+int AI::minimaxValue(State& state, const int depth, int alpha, int beta, bool max)
 {
+  string color = max ? player->color : player->opponent->color;
+  string other_color = max ? player->opponent->color : player->color;
+
   if (depth == 0)
-    return state.board.getUtility(player->color, attack);
+  {
+    if (max)
+      return state.board.getUtility(color, attack);
+    else
+      return state.board.getUtility(color, attack) * -1;
+  }
 
   // generate new moves
   vector<PieceToMove> movable_pieces;
   vector<State> possible_states;
-  bitset<BOARD_SIZE> attacked = getAttacked(player->opponent->color, state.board, attack);
+  bitset<BOARD_SIZE> attacked = getAttacked((max ? other_color : color), state.board, attack);
 
   // get king location
   int king_location;
   for (int i = 0; i < BOARD_SIZE; i++)
   {
-    if ((player->color == BLACK && state.board.black[KING][i] == 1) ||
-      (player->color == WHITE && state.board.white[KING][i] == 1))
+    if ((color == BLACK && state.board.black[KING][i] == 1) ||
+      (color == WHITE && state.board.white[KING][i] == 1))
     {
       king_location = i;
       break;
@@ -862,117 +869,214 @@ int AI::maxValue(State& state, const int depth, int alpha, int beta)
 
   if (can_en_passant)
     en_passant_square = state.new_index + HEIGHT_WIDTH *
-      (player->opponent->color == BLACK ? 1 : -1);
+      (other_color == BLACK ? 1 : -1);
 
   // find all movable pieces and their possible moves (don't worry about check)
-  findMovablePieces(player->color, movable_pieces, state.board,
+  findMovablePieces(color, movable_pieces, state.board,
     attacked, king_location, en_passant_square);
 
   // for all movable pieces, find valid moves
-  findMoves(player->color, king_location, state.board, movable_pieces, possible_states);
+  findMoves(color, king_location, state.board, movable_pieces, possible_states);
 
   // if my king has no valid moves and it's checked
-  if (state.board.getKingMoves(player->color, king_location, attack).count() == 0 &&
+  if (state.board.getKingMoves(color, king_location, attack).count() == 0 &&
     isAttacked(attacked, king_location))
   {
     return CHECKMATE * -1;
   }
 
   // initialize utility outside the realm of possibility
-  int best_utility = MAX_POINTS * -1; // below possible range
+  int best_utility = max ? MAX_POINTS * -1 : MAX_POINTS;
 
-  for (auto state : possible_states)
+  if (max)
   {
-    int utility = minValue(state, depth - 1, alpha, beta);
-
-    // update best move
-    if (utility > best_utility)
-      best_utility = utility;
-
-    // update alpha
-    if (state.utility > alpha)
-      alpha = state.utility;
-
-    // prune
-    if (state.utility >= beta)
-      return best_utility;
-  }
-
-  return best_utility;
-}
-
-int AI::minValue(State& state, const int depth, int alpha, int beta)
-{
-  if (depth == 0)
-    return state.board.getUtility(player->opponent->color, attack) * -1;
-
-  // generate new moves
-  vector<PieceToMove> movable_pieces;
-  vector<State> possible_states;
-  bitset<BOARD_SIZE> attacked = getAttacked(player->color, state.board, attack);
-
-  // get king location
-  int king_location;
-  for (int i = 0; i < BOARD_SIZE; i++)
-  {
-    if ((player->opponent->color == BLACK && state.board.black[KING][i] == 1) ||
-      (player->opponent->color == WHITE && state.board.white[KING][i] == 1))
+    for (auto state : possible_states)
     {
-      king_location = i;
-      break;
+      int utility = minimaxValue(state, depth - 1, alpha, beta, false);
+
+      // update best move
+      if (utility > best_utility)
+        best_utility = utility;
+
+      // update alpha
+      if (state.utility > alpha)
+        alpha = state.utility;
+
+      // prune
+      if (state.utility >= beta)
+        return best_utility;
     }
   }
 
-  // check if en passant possible
-  bool can_en_passant = false;
-  int en_passant_square = -1;
-  if (state.type == "Pawn")
+  else // min
   {
-    // if pawn moved two ranks
-    if (abs(state.current_index - state.new_index) == (HEIGHT_WIDTH + HEIGHT_WIDTH))
-      can_en_passant = true;
-  }
+    for (auto state : possible_states)
+    {
+      int utility = minimaxValue(state, depth - 1, alpha, beta, true);
 
-  if (can_en_passant)
-    en_passant_square = state.new_index + HEIGHT_WIDTH *
-      (player->color == BLACK ? 1 : -1);
+      // update best move
+      if (utility < best_utility)
+        best_utility = utility;
 
-  // find all movable pieces and their possible moves (don't worry about check)
-  findMovablePieces(player->opponent->color, movable_pieces, state.board,
-    attacked, king_location, en_passant_square);
+      // update beta
+      if (state.utility < beta)
+        beta = state.utility;
 
-  // for all movable pieces, find valid moves
-  findMoves(player->opponent->color, king_location, state.board, movable_pieces, possible_states);
-
-  // if their king has no valid moves and it's checked
-  if (state.board.getKingMoves(player->opponent->color, king_location, attack).count() == 0 &&
-    isAttacked(attacked, king_location))
-  {
-    return CHECKMATE;
-  }
-
-  // initialize utility outside the realm of possibility
-  int best_utility = MAX_POINTS; // above possible range
-
-  for (auto state : possible_states)
-  {
-    int utility = maxValue(state, depth - 1, alpha, beta);
-
-    // update best move
-    if (utility < best_utility)
-      best_utility = utility;
-
-    // update beta
-    if (state.utility < beta)
-      beta = state.utility;
-
-    // prune
-    if (state.utility <= alpha)
-      return best_utility;
+      // prune
+      if (state.utility <= alpha)
+        return best_utility;
+    }
   }
 
   return best_utility;
 }
+
+// // returns the maximum predicted utility
+// int AI::maxValue(State& state, const int depth, int alpha, int beta)
+// {
+//   if (depth == 0)
+//     return state.board.getUtility(player->color, attack);
+//
+//   // generate new moves
+//   vector<PieceToMove> movable_pieces;
+//   vector<State> possible_states;
+//   bitset<BOARD_SIZE> attacked = getAttacked(player->opponent->color, state.board, attack);
+//
+//   // get king location
+//   int king_location;
+//   for (int i = 0; i < BOARD_SIZE; i++)
+//   {
+//     if ((player->color == BLACK && state.board.black[KING][i] == 1) ||
+//       (player->color == WHITE && state.board.white[KING][i] == 1))
+//     {
+//       king_location = i;
+//       break;
+//     }
+//   }
+//
+//   // check if en passant possible
+//   bool can_en_passant = false;
+//   int en_passant_square = -1;
+//   if (state.type == "Pawn")
+//   {
+//     // if pawn moved two ranks
+//     if (abs(state.current_index - state.new_index) == (HEIGHT_WIDTH + HEIGHT_WIDTH))
+//       can_en_passant = true;
+//   }
+//
+//   if (can_en_passant)
+//     en_passant_square = state.new_index + HEIGHT_WIDTH *
+//       (player->opponent->color == BLACK ? 1 : -1);
+//
+//   // find all movable pieces and their possible moves (don't worry about check)
+//   findMovablePieces(player->color, movable_pieces, state.board,
+//     attacked, king_location, en_passant_square);
+//
+//   // for all movable pieces, find valid moves
+//   findMoves(player->color, king_location, state.board, movable_pieces, possible_states);
+//
+//   // if my king has no valid moves and it's checked
+//   if (state.board.getKingMoves(player->color, king_location, attack).count() == 0 &&
+//     isAttacked(attacked, king_location))
+//   {
+//     return CHECKMATE * -1;
+//   }
+//
+//   // initialize utility outside the realm of possibility
+//   int best_utility = MAX_POINTS * -1; // below possible range
+//
+//   for (auto state : possible_states)
+//   {
+//     int utility = minValue(state, depth - 1, alpha, beta);
+//
+//     // update best move
+//     if (utility > best_utility)
+//       best_utility = utility;
+//
+//     // update alpha
+//     if (state.utility > alpha)
+//       alpha = state.utility;
+//
+//     // prune
+//     if (state.utility >= beta)
+//       return best_utility;
+//   }
+//
+//   return best_utility;
+// }
+//
+// int AI::minValue(State& state, const int depth, int alpha, int beta)
+// {
+//   if (depth == 0)
+//     return state.board.getUtility(player->opponent->color, attack) * -1;
+//
+//   // generate new moves
+//   vector<PieceToMove> movable_pieces;
+//   vector<State> possible_states;
+//   bitset<BOARD_SIZE> attacked = getAttacked(player->color, state.board, attack);
+//
+//   // get king location
+//   int king_location;
+//   for (int i = 0; i < BOARD_SIZE; i++)
+//   {
+//     if ((player->opponent->color == BLACK && state.board.black[KING][i] == 1) ||
+//       (player->opponent->color == WHITE && state.board.white[KING][i] == 1))
+//     {
+//       king_location = i;
+//       break;
+//     }
+//   }
+//
+//   // check if en passant possible
+//   bool can_en_passant = false;
+//   int en_passant_square = -1;
+//   if (state.type == "Pawn")
+//   {
+//     // if pawn moved two ranks
+//     if (abs(state.current_index - state.new_index) == (HEIGHT_WIDTH + HEIGHT_WIDTH))
+//       can_en_passant = true;
+//   }
+//
+//   if (can_en_passant)
+//     en_passant_square = state.new_index + HEIGHT_WIDTH *
+//       (player->color == BLACK ? 1 : -1);
+//
+//   // find all movable pieces and their possible moves (don't worry about check)
+//   findMovablePieces(player->opponent->color, movable_pieces, state.board,
+//     attacked, king_location, en_passant_square);
+//
+//   // for all movable pieces, find valid moves
+//   findMoves(player->opponent->color, king_location, state.board, movable_pieces, possible_states);
+//
+//   // if their king has no valid moves and it's checked
+//   if (state.board.getKingMoves(player->opponent->color, king_location, attack).count() == 0 &&
+//     isAttacked(attacked, king_location))
+//   {
+//     return CHECKMATE;
+//   }
+//
+//   // initialize utility outside the realm of possibility
+//   int best_utility = MAX_POINTS; // above possible range
+//
+//   for (auto state : possible_states)
+//   {
+//     int utility = maxValue(state, depth - 1, alpha, beta);
+//
+//     // update best move
+//     if (utility < best_utility)
+//       best_utility = utility;
+//
+//     // update beta
+//     if (state.utility < beta)
+//       beta = state.utility;
+//
+//     // prune
+//     if (state.utility <= alpha)
+//       return best_utility;
+//   }
+//
+//   return best_utility;
+// }
 
 // if the last piece moved affects castling ability, update variables
 void AI::updateCastlingAbility(const int current_index)
