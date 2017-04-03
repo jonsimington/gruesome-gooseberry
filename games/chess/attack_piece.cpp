@@ -138,7 +138,6 @@ void AttackPiece::queenAttacks()
     int right = i;
 
     // attack squares to the left
-
     do
     {
       attacking_queen[i][left] = 1;
@@ -152,6 +151,7 @@ void AttackPiece::queenAttacks()
       right++;
     } while (right % HEIGHT_WIDTH != 0 && right < BOARD_SIZE);
   }
+  
   return;
 }
 

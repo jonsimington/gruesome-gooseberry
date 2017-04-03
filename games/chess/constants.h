@@ -10,7 +10,7 @@
 using namespace std;
 
 // general game-wide constants
-const long int TIME = 3000000000; // 3 seconds to think
+const long int TIME = 3000000000; // 3 seconds to think --> 300 moves at the absolute most
 const int INFINITY = 2147483647; // absolute value of initial alpha & beta
 const int CHECKMATE = 1000000; // value of board state where checkmate occurs
 const int MAX_POINTS = 1000; // initialize starting utility outside realm of possiblity
