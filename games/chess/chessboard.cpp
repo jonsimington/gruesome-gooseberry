@@ -7,6 +7,12 @@
 #include "chessboard.h"
 using namespace std;
 
+// decides which state has appeared more in the history table
+bool operator>(const State& lhs, const State& rhs)
+{
+  return lhs.repetitions >= rhs.repetitions;
+}
+
 // returns the rank of a specificolor index
 int getRank(const int i)
 {

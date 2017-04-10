@@ -31,6 +31,7 @@ void AI::start()
   // This is a good place to initialize any variables
   srand(time(NULL));
   attack.generateAttacks();
+  generateMoves();
 
   // assume they've moved
   castle.king_moved = true;
@@ -81,7 +82,8 @@ bool AI::run_turn()
 
   // generate new moves
   vector<PieceToMove> movable_pieces;
-  vector<State> possible_states;
+  // vector<State> possible_states;
+  priority_queue<State, vector<State>, greater<State>> possible_states;
 
   // check if en passant is possible
   bool can_en_passant = initializeEnPassant();
@@ -121,8 +123,6 @@ bool AI::run_turn()
   while (true)
   {
     best_move = minimax(possible_states, depth);
-    cout << "MAX: " << best_move.utility << endl;
-
     auto duration = chrono::duration_cast<chrono::nanoseconds>(chrono::system_clock::now() - start);
 
     // if we found checkmate or we've spent too long thinking
@@ -210,6 +210,79 @@ void AI::print_current_board()
 
     cout << str << endl;
   }
+}
+
+// adds all possible moves to the history table
+void AI::generateMoves()
+{
+  string history;
+
+  for (int i = 0; i < BOARD_SIZE; i++)
+  {
+    for (int j = 0; j < BOARD_SIZE; j++)
+    {
+      if (i != j) // we don't care about the square a piece sits on
+      {
+        history = to_string(i) + to_string(j);
+
+        if (attack.attacking_king[i][j] == 1)
+        {
+          history += "King";
+          history_table.insert({history, 0});
+        }
+
+        if (attack.attacking_queen[i][j] == 1)
+        {
+          history += "Queen";
+          history_table.insert({history, 0});
+        }
+
+        if (attack.attacking_rook[i][j] == 1)
+        {
+          history += "Rook";
+          history_table.insert({history, 0});
+        }
+
+        if (attack.attacking_bishop[i][j] == 1)
+        {
+          history += "Bishop";
+          history_table.insert({history, 0});
+        }
+
+        if (attack.attacking_knight[i][j] == 1)
+        {
+          history += "Knight";
+          history_table.insert({history, 0});
+        }
+
+        if (attack.attacking_b_pawn[i][j] == 1)
+        {
+          history += "Pawn";
+          history_table.insert({history, 0});
+        }
+
+        if (attack.attacking_w_pawn[i][j] == 1)
+        {
+          history += "Pawn";
+          history_table.insert({history, 0});
+        }
+
+        if (attack.moving_b_pawn[i][j] == 1)
+        {
+          history += "Pawn";
+          history_table.insert({history, 0});
+        }
+
+        if (attack.moving_w_pawn[i][j] == 1)
+        {
+          history += "Pawn";
+          history_table.insert({history, 0});
+        }
+      }
+    }
+  }
+
+  return;
 }
 
 // this will initialize castling ability based on game's starting FEN
@@ -509,7 +582,7 @@ void AI::findMovablePieces(const string color, vector<PieceToMove>& movable_piec
 
 // this filters out all illegal moves from all movable pieces
 void AI::findMoves(const string color, const int king_location, const Chessboard& board,
-  vector<PieceToMove>& moves, vector<State>& states)
+  vector<PieceToMove>& moves, priority_queue<State, vector<State>, greater<State>>& states)
 {
   // need to look at moves of my own prediction, not just actually completed moves
   bool near_draw = drawSetup();
@@ -703,10 +776,15 @@ void AI::findMoves(const string color, const int king_location, const Chessboard
         // if this move doesn't lead to a simplified draw
         if (!isAttacked(attacked, location) && !will_draw)
         {
+          string history;
+
           state.checkmate = false;
           state.current_index = current_index;
           state.new_index = new_index;
-          states.push_back(state);
+          history = to_string(current_index) + to_string(new_index) + state.type;
+
+          state.repetitions = history_table[history];
+          states.push(state);
         }
 
         else // piece can't move here
@@ -781,10 +859,10 @@ bool AI::drawSetup()
   return draw_ready;
 }
 
-// this will use IDDLMM to pick which move to make
-State AI::minimax(vector<State>& states, const int depth)
+// this will use HTQSABIDM to pick which move to make
+State AI::minimax(priority_queue<State, vector<State>, greater<State>>& states, const int depth)
 {
-  State best_move = states[0];
+  State best_move = states.top();
   int best_utility;
   int alpha = INFINITY * -1;
   int beta = INFINITY;
@@ -792,15 +870,16 @@ State AI::minimax(vector<State>& states, const int depth)
   // initialize utility outside the realm of possibility
   best_utility = MAX_POINTS * -1; // below possible range
 
-  for (auto state : states)
+  while (!states.empty())
   {
-    state.utility = minimaxValue(state, depth - 1, alpha, beta, true);
+    State top_state = states.top();
+    int utility = minimaxValue(top_state, depth - 1, alpha, beta, true);
 
     // update best move
-    if (state.utility > best_utility)
+    if (utility > best_utility)
     {
-      best_utility = state.utility;
-      best_move = state;
+      best_utility = utility;
+      best_move = states.top();
 
       // still outside the realm of possibility
       if (best_utility > CHECKMATE / 2)
@@ -811,16 +890,29 @@ State AI::minimax(vector<State>& states, const int depth)
     }
 
     // update alpha
-    if (state.utility > alpha)
-      alpha = state.utility;
+    if (utility > alpha)
+      alpha = utility;
 
     // prune
-    if (state.utility >= beta)
+    if (utility >= beta)
     {
       best_move.utility = best_utility;
+
+      string history;
+      history = to_string(best_move.current_index) + to_string(best_move.new_index)
+        + best_move.type;
+      history_table[history]++;
+
       return best_move;
     }
+
+    states.pop();
   }
+
+  string history;
+  history = to_string(best_move.current_index) + to_string(best_move.new_index)
+    + best_move.type;
+  history_table[history]++;
 
   best_move.utility = best_utility;
   return best_move;
@@ -842,7 +934,7 @@ int AI::minimaxValue(State& state, const int depth, int alpha, int beta, bool ma
 
   // generate new moves
   vector<PieceToMove> movable_pieces;
-  vector<State> possible_states;
+  priority_queue<State, vector<State>, greater<State>> possible_states;
   bitset<BOARD_SIZE> attacked = getAttacked((max ? other_color : color), state.board, attack);
 
   // get king location
@@ -890,7 +982,7 @@ int AI::minimaxValue(State& state, const int depth, int alpha, int beta, bool ma
 
   if (max)
   {
-    for (auto state : possible_states)
+    while (!possible_states.empty())
     {
       state.utility = minimaxValue(state, depth - 1, alpha, beta, false);
 
@@ -905,12 +997,14 @@ int AI::minimaxValue(State& state, const int depth, int alpha, int beta, bool ma
       // prune
       if (state.utility >= beta)
         return best_utility;
+
+      possible_states.pop();
     }
   }
 
   else // min
   {
-    for (auto state : possible_states)
+    while (!possible_states.empty())
     {
       state.utility = minimaxValue(state, depth - 1, alpha, beta, true);
 
@@ -925,6 +1019,8 @@ int AI::minimaxValue(State& state, const int depth, int alpha, int beta, bool ma
       // prune
       if (state.utility <= alpha)
         return best_utility;
+
+      possible_states.pop();
     }
   }
 

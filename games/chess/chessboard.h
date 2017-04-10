@@ -21,6 +21,7 @@ struct BasicPiece
   string type;
 };
 
+// whether king-side and queen-side castles are possible
 struct CastleCheck
 {
   bool king_moved;
@@ -29,7 +30,7 @@ struct CastleCheck
 };
 
 // this class holds the locations of all pieces
-class Chessboard // need public and private members (getters/setters)
+class Chessboard
 {
 public:
   bitset<BOARD_SIZE> black[NUM_TYPES];
@@ -71,9 +72,11 @@ struct State
   int current_index;
   int new_index;
   int utility;
+  int repetitions;
 };
 
 // additional, non-class-specific functions
+bool operator>(const State& lhs, const State& rhs);
 int getIndex(const int rank, const string file);
 int getRank(const int i);
 string getFile(const int i);

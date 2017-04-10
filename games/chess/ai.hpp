@@ -15,7 +15,8 @@
 #include "attack_piece.h"
 #include "chessboard.h"
 #include <chrono>
-#include <iostream>
+#include <queue>
+#include <unordered_map>
 using namespace std;
 
 namespace cpp_client
@@ -43,6 +44,7 @@ public:
     // You can add additional class variables here.
     AttackPiece attack; // every possible move for any piece on any square
     CastleCheck castle; // whether or not castling is possible
+    unordered_map<string, int> history_table;
 
     /// <summary>
     /// This returns your AI's name to the game server.
@@ -83,6 +85,7 @@ public:
     void print_current_board();
 
     // my functions
+    void generateMoves();
     void initializeCastling();
     bool initializeEnPassant();
     int initializeKingLocation(const vector<BasicPiece>& pieces);
@@ -91,11 +94,9 @@ public:
       Chessboard& board, const bitset<BOARD_SIZE>& attacked,
       const int king_location, const int en_passant_square);
     void findMoves(const string color, const int king_location, const Chessboard& board,
-      vector<PieceToMove>& moves, vector<State>& states);
-    State minimax(vector<State>& states, const int depth);
+      vector<PieceToMove>& moves, priority_queue<State, vector<State>, greater<State>>& states);
+    State minimax(priority_queue<State, vector<State>, greater<State>>& states, const int depth);
     int minimaxValue(State& state, const int depth, int alpha, int beta, bool max);
-    int maxValue(State& state, const int depth, int alpha, int beta);
-    int minValue(State& state, const int depth, int alpha, int beta);
     void updateCastlingAbility(const int current_index);
     bool drawSetup();
     void makeMove(const int old_index, const int new_index);
