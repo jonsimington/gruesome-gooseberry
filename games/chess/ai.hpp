@@ -95,8 +95,11 @@ public:
       const int king_location, const int en_passant_square);
     void findMoves(const string color, const int king_location, const Chessboard& board,
       vector<PieceToMove>& moves, priority_queue<State, vector<State>, greater<State>>& states);
-    State minimax(priority_queue<State, vector<State>, greater<State>>& states, const int depth);
-    int minimaxValue(State& state, const int depth, int alpha, int beta, bool max);
+    bool isQuiescent(const State& state);
+    State minimax(priority_queue<State, vector<State>, greater<State>>& states,
+      const int depth, const int q_depth);
+    int minimaxValue(State& state, const int depth, const int q_depth,
+      int alpha, int beta, bool max);
     void updateCastlingAbility(const int current_index);
     bool drawSetup();
     void makeMove(const int old_index, const int new_index);

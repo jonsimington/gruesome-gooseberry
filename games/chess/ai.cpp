@@ -82,7 +82,6 @@ bool AI::run_turn()
 
   // generate new moves
   vector<PieceToMove> movable_pieces;
-  // vector<State> possible_states;
   priority_queue<State, vector<State>, greater<State>> possible_states;
 
   // check if en passant is possible
@@ -122,7 +121,7 @@ bool AI::run_turn()
 
   while (true)
   {
-    best_move = minimax(possible_states, depth);
+    best_move = minimax(possible_states, depth, Q_DEPTH);
     auto duration = chrono::duration_cast<chrono::nanoseconds>(chrono::system_clock::now() - start);
 
     // if we found checkmate or we've spent too long thinking
@@ -800,6 +799,50 @@ void AI::findMoves(const string color, const int king_location, const Chessboard
   return;
 }
 
+bool AI::isQuiescent(const State& state)
+{
+  // captures
+  if (state.board.all_pieces[state.new_index])
+    return false;
+
+  // white promotions
+  for (int i = 48; i < 56; i++)
+  {
+    if (state.board.white[PAWN][i] == 1)
+    {
+      if (state.board.all_pieces[i + HEIGHT_WIDTH] == 0 ||
+        state.board.b_pieces[i + HEIGHT_WIDTH - 1] == 1 ||
+        state.board.b_pieces[i + HEIGHT_WIDTH + 1] == 1)
+      {
+        return false;
+      }
+    }
+  }
+
+  // black promotions
+  for (int j = 8; j < 16; j++)
+  {
+    if (state.board.black[PAWN][j] == 1)
+    {
+      if (state.board.all_pieces[j - HEIGHT_WIDTH] == 0 ||
+        state.board.w_pieces[j - HEIGHT_WIDTH - 1] == 1 ||
+        state.board.w_pieces[j - HEIGHT_WIDTH + 1] == 1)
+      {
+        return false;
+      }
+    }
+  }
+
+  // check
+
+  // {
+  //
+  //   return false;
+  // }
+
+  return true;
+}
+
 // returns true if one move from a draw; false otherwise
 bool AI::drawSetup()
 {
@@ -860,7 +903,8 @@ bool AI::drawSetup()
 }
 
 // this will use HTQSABIDM to pick which move to make
-State AI::minimax(priority_queue<State, vector<State>, greater<State>>& states, const int depth)
+State AI::minimax(priority_queue<State, vector<State>, greater<State>>& states,
+  const int depth, const int q_depth)
 {
   State best_move = states.top();
   int best_utility;
@@ -873,7 +917,12 @@ State AI::minimax(priority_queue<State, vector<State>, greater<State>>& states, 
   while (!states.empty())
   {
     State top_state = states.top();
-    int utility = minimaxValue(top_state, depth - 1, alpha, beta, true);
+    int utility;
+
+    if (depth == 0 && !isQuiescent(top_state))
+      utility = minimaxValue(top_state, depth, q_depth - 1, alpha, beta, true);
+    else
+      utility = minimaxValue(top_state, depth - 1, q_depth, alpha, beta, true);
 
     // update best move
     if (utility > best_utility)
@@ -919,12 +968,13 @@ State AI::minimax(priority_queue<State, vector<State>, greater<State>>& states, 
 }
 
 // returns the max utility if max == true; min utility otherwise
-int AI::minimaxValue(State& state, const int depth, int alpha, int beta, bool max)
+int AI::minimaxValue(State& state, const int depth, const int q_depth,
+  int alpha, int beta, bool max)
 {
   string color = max ? player->color : player->opponent->color;
   string other_color = max ? player->opponent->color : player->color;
 
-  if (depth == 0)
+  if (depth == 0 && (q_depth == 0 || !isQuiescent(state)))
   {
     if (max)
       return state.board.getUtility(color, attack);
@@ -984,7 +1034,10 @@ int AI::minimaxValue(State& state, const int depth, int alpha, int beta, bool ma
   {
     while (!possible_states.empty())
     {
-      state.utility = minimaxValue(state, depth - 1, alpha, beta, false);
+      if (depth == 0) // we already know it's quiescent if depth == 0
+        state.utility = minimaxValue(state, depth, q_depth - 1, alpha, beta, false);
+      else
+        state.utility = minimaxValue(state, depth - 1, q_depth, alpha, beta, false);
 
       // update best move
       if (state.utility > best_utility)
@@ -1006,7 +1059,10 @@ int AI::minimaxValue(State& state, const int depth, int alpha, int beta, bool ma
   {
     while (!possible_states.empty())
     {
-      state.utility = minimaxValue(state, depth - 1, alpha, beta, true);
+      if (depth == 0) // we already know it's quiescent if depth == 0
+        state.utility = minimaxValue(state, depth, q_depth - 1, alpha, beta, true);
+      else
+        state.utility = minimaxValue(state, depth - 1, q_depth, alpha, beta, true);
 
       // update best move
       if (state.utility < best_utility)
