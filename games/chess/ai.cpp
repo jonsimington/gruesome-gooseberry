@@ -20,7 +20,7 @@ namespace chess
 string AI::get_name() const
 {
   // REPLACE WITH YOUR TEAM NAME!
-  return "david-crow";
+  return "Gruesome Gooseberry";
 }
 
 /// <summary>
